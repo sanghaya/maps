@@ -28,7 +28,7 @@ public class BaconManager {
   private Map<String, String> movieIdtoName;
   private Map<String, List<String>> actorToMovies;
   private Map<String, List<String>> movieToActors;
-  private Map<Node, List<Node>> neighborsCache;
+  private Map<BaconNode, List<BaconNode>> neighborsCache;
 
   public BaconManager() {
     actorIdtoName = new HashMap<String, String>();
@@ -36,7 +36,7 @@ public class BaconManager {
     movieIdtoName = new HashMap<String, String>();
     actorToMovies = new HashMap<String, List<String>>();
     movieToActors = new HashMap<String, List<String>>();
-    neighborsCache = new HashMap<Node, List<Node>>();
+    neighborsCache = new HashMap<BaconNode, List<BaconNode>>();
   }
 
   /**
@@ -106,18 +106,18 @@ public class BaconManager {
     // System.out.println("??");
     try {
       // System.out.println("trying");
-      Node start = getActorNode(actor1);
-      Node end = getActorNode(actor2);
+      BaconNode start = getActorNode(actor1);
+      BaconNode end = getActorNode(actor2);
 
       Dijkstra dj = new Dijkstra(this);
-      Node n = dj.findPath(start, end);
+      BaconNode n = dj.findPath(start, end);
 
       if (n == null) {
         System.out.println(actor1 + " -/- " + actor2);
         return "";
       }
 
-      Node current = n;
+      BaconNode current = n;
       List<String> output = new ArrayList<String>();
       while (current.getPrevious() != null) {
         String s = current.getPrevious().getName() + " -> " + current.getName()
@@ -139,11 +139,11 @@ public class BaconManager {
     return "";
   }
 
-  public List<Node> getNeighbors(Node n) throws SQLException {
+  public List<BaconNode> getNeighbors(BaconNode n) throws SQLException {
     // if (neighborsCache.containsKey(n)) {
     // return neighborsCache.get(n);
     // } else {
-    List<Node> neighbors = new ArrayList<Node>();
+    List<BaconNode> neighbors = new ArrayList<BaconNode>();
     List<String> movies = getMovies(n.getId());
     String name = n.getName();
     String[] parts = name.split(" ");
@@ -154,7 +154,7 @@ public class BaconManager {
       List<String> allActors = getActors(movie);
       double weight = 1.0 / allActors.size();
       String movieName = getMovieName(movie);
-      List<Node> possibleBacons = getBacons(c, movieName, weight, allActors);
+      List<BaconNode> possibleBacons = getBacons(c, movieName, weight, allActors);
       neighbors.addAll(possibleBacons);
     }
 
@@ -189,9 +189,9 @@ public class BaconManager {
     }
   }
 
-  private List<Node> getBacons(String c, String movieName, double w,
+  private List<BaconNode> getBacons(String c, String movieName, double w,
       List<String> actors) throws SQLException {
-    List<Node> bacons = new ArrayList<Node>();
+    List<BaconNode> bacons = new ArrayList<BaconNode>();
 
     for (String actor : actors) {
       String name = "";
@@ -215,7 +215,7 @@ public class BaconManager {
 
       if (!name.isEmpty()) {
         if (c.equals(name.charAt(0) + "")) {
-          Node n = new Node(actor, name, movieName, null, w);
+          BaconNode n = new BaconNode(actor, name, movieName, null, w);
           bacons.add(n);
         }
       }
@@ -224,7 +224,7 @@ public class BaconManager {
     return bacons;
   }
 
-  private Node getActorNode(String name) throws SQLException {
+  private BaconNode getActorNode(String name) throws SQLException {
     String id = "";
     if (actorNametoId.containsKey(name)) {
       id = actorNametoId.get(name);
@@ -250,7 +250,7 @@ public class BaconManager {
       }
       actorNametoId.put(name, id);
     }
-    Node n = new Node(id, name, "", null, 0);
+    BaconNode n = new BaconNode(id, name, "", null, 0);
     return n;
   }
 

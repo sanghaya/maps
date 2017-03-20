@@ -2,14 +2,14 @@ package edu.brown.cs.jjeon5.bacon;
 
 import java.util.Objects;
 
-public class Node {
+public class BaconNode {
   private String id;
   private String name;
   private String movieName;
-  private Node previous;
+  private BaconNode previous;
   private double weight;
 
-  public Node(String id, String name, String movieName, Node previous,
+  public BaconNode(String id, String name, String movieName, BaconNode previous,
       double weight) {
     this.id = id;
     this.movieName = movieName;
@@ -30,7 +30,7 @@ public class Node {
     return name;
   }
 
-  public Node getPrevious() {
+  public BaconNode getPrevious() {
     return previous;
   }
 
@@ -42,7 +42,7 @@ public class Node {
     weight = w;
   }
 
-  public void setPrevious(Node n) {
+  public void setPrevious(BaconNode n) {
     previous = n;
   }
 
@@ -56,10 +56,10 @@ public class Node {
     if (o == this) {
       return true;
     }
-    if (!(o instanceof Node)) {
+    if (!(o instanceof BaconNode)) {
       return false;
     }
-    Node c = (Node) o;
+    BaconNode c = (BaconNode) o;
     return id.equals(c.getId()) && name.equals(c.getName());
   }
 }

@@ -17,29 +17,29 @@ public class Dijkstra {
     this.bm = bm;
   }
 
-  public Node findPath(Node start, Node end) throws SQLException {
+  public BaconNode findPath(BaconNode start, BaconNode end) throws SQLException {
     Map<String, Double> frontierWeights = new HashMap<String, Double>();
 
-    PriorityQueue<Node> frontier = new PriorityQueue<Node>(11,
-        new Comparator<Node>() {
+    PriorityQueue<BaconNode> frontier = new PriorityQueue<BaconNode>(11,
+        new Comparator<BaconNode>() {
           @Override
-          public int compare(Node a, Node b) {
+          public int compare(BaconNode a, BaconNode b) {
             return Double.compare(a.getWeight(), b.getWeight());
           }
         });
     frontier.add(start);
 
-    Set<Node> explored = new HashSet<Node>();
+    Set<BaconNode> explored = new HashSet<BaconNode>();
 
     while (frontier.size() != 0) {
-      Node node = frontier.poll();
+      BaconNode node = frontier.poll();
       // System.out.println(node.getName());
       if (node.getId().equals(end.getId())) {
         return node;
       }
       explored.add(node);
-      List<Node> neighbors = bm.getNeighbors(node);
-      for (Node n : neighbors) {
+      List<BaconNode> neighbors = bm.getNeighbors(node);
+      for (BaconNode n : neighbors) {
         if (!explored.contains(n) && !frontier.contains(n)) {
           n.setWeight(node.getWeight() + n.getWeight());
           frontierWeights.put(n.getId(), n.getWeight());
