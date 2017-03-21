@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -84,29 +86,54 @@ public final class Main {
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
+        Set<String> wayNodes;
         
-        
-        if(tokens.get(0).equals("map")) {
+        if (tokens.get(0).equals("map")) {
         	System.out.println("map starting");
         	db.setupDB(tokens.get(1));
             Set<String> traversable = db.queryWays();
             List<Node> nodes = new ArrayList<Node>();
             for(String n:traversable) {
             	List<String> coordinates = db.queryLatLon(n);
-            	System.out.println(coordinates);
+            	//System.out.println(coordinates);
             	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
             	nodes.add(node);
             }
             Node[] nodesArray = nodes.toArray(new Node[0]);
             tree = new KDTree<Node>(nodesArray);
-            System.out.println(tree.getRoot().getObject().getId());
-        } else if(tokens.get(0).equals("nearest")) {
+            //System.out.println(tree.getRoot().getObject().getId());
+        } else if (tokens.get(0).equals("nearest")) {
         	System.out.println("nearest starting");
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
             List<Node> list = tree.findNearest(1, n);
             for (int i = 0; i < list.size(); i++) {
               System.out.println(list.get(i).getId());
             }
+        } else if (tokens.get(0).equals("ways")) {
+            Double lat1 = Double.valueOf(tokens.get(1));
+            Double lat2 = Double.valueOf(tokens.get(3));
+            Double lon1 = Double.valueOf(tokens.get(2));
+            Double lon2 = Double.valueOf(tokens.get(4));
+            Set<String> boundedNodes = new HashSet<String>();
+            Set<String> boundedWay = new HashSet<String>();
+            wayNodes = db.queryNodes();
+            
+            for (String each: wayNodes) {
+              List<String> latlon = db.queryLatLon(each);
+              Double latTarget = Double.valueOf(latlon.get(0));
+              Double lonTarget = Double.valueOf(latlon.get(1));
+              if ((latTarget <= lat1 && latTarget >= lat2) && (lonTarget >= lon1 && lonTarget <= lon2)) {
+                boundedNodes.add(each);
+              }
+            }
+            for (String each: boundedNodes) {
+              boundedWay.addAll(db.queryWayFromNode(each));
+            }
+            
+            Iterator<String> itr = boundedWay.iterator();
+            while(itr.hasNext()){
+               System.out.println(itr.next());
+            } 
         }
         
         //if (!commands.contains(key)) {

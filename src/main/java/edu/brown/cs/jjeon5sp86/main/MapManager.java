@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
+
 public class MapManager {
   private Connection conn = null;
   
@@ -32,7 +33,6 @@ public class MapManager {
   }
   
   public Set<String> queryWays() throws SQLException {
-    System.out.println("reading data");
     Set<String> nodeList = new HashSet<>();
     try {
       PreparedStatement prep;
@@ -50,13 +50,30 @@ public class MapManager {
     } catch (SQLException e) {
       nodeList = null;
     }
-    System.out.println("done reading");
     System.out.println(nodeList);
     return nodeList;
   }
   
+  public Set<String> queryNodes() throws SQLException {
+    Set<String> nodeList = new HashSet<>();
+    try {
+      PreparedStatement prep;
+      prep = conn.prepareStatement(
+              "SELECT id FROM node");
+      ResultSet rs = prep.executeQuery();
+      while (rs.next()) {
+        nodeList.add(rs.getString(1));
+      }
+      rs.close();
+      prep.close();
+    } catch (SQLException e) {
+      nodeList = null;
+    }
+    return nodeList;
+  }
+
+  
   public List<String> queryLatLon(String id) throws SQLException {
-    System.out.println("reading data");
     List<String> coordinates = new ArrayList<>();
     try {
       PreparedStatement prep;
@@ -73,7 +90,26 @@ public class MapManager {
     } catch (SQLException e) {
       coordinates = null;
     }
-    System.out.println("done reading");
     return coordinates;
+  }
+  
+  public Set<String> queryWayFromNode(String id) throws SQLException {
+    Set<String> wayIdList = new HashSet<>();
+    try {
+      PreparedStatement prep;
+      prep = conn.prepareStatement(
+              "SELECT id FROM way WHERE start = ? or end = ?");
+      prep.setString(1, id);
+      prep.setString(2, id);
+      ResultSet rs = prep.executeQuery();
+      while (rs.next()) {
+        wayIdList.add(rs.getString(1));
+      }
+      rs.close();
+      prep.close();
+    } catch (SQLException e) {
+      wayIdList = null;
+    }
+    return wayIdList;
   }
 }
