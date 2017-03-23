@@ -86,7 +86,7 @@ public class KDTree<T extends KDable<T>> {
       return;
     }
     
-    System.out.println(node.getObject());
+    //System.out.println(node.getObject());
     
     if (!point.equals(node.getObject())) {
       enqueue(node, guessQ, distQ, k, point);

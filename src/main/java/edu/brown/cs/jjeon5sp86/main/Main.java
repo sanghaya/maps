@@ -89,13 +89,12 @@ public final class Main {
         Set<String> wayNodes;
         
         if (tokens.get(0).equals("map")) {
-        	System.out.println("map starting");
         	db.setupDB(tokens.get(1));
             Set<String> traversable = db.queryWays();
             List<Node> nodes = new ArrayList<Node>();
             for(String n:traversable) {
             	List<String> coordinates = db.queryLatLon(n);
-            	//System.out.println(coordinates);
+            	// System.out.println(coordinates);
             	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
             	nodes.add(node);
             }
@@ -103,7 +102,7 @@ public final class Main {
             tree = new KDTree<Node>(nodesArray);
             //System.out.println(tree.getRoot().getObject().getId());
         } else if (tokens.get(0).equals("nearest")) {
-        	System.out.println("nearest starting");
+        	//System.out.println("nearest starting");
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
             List<Node> list = tree.findNearest(1, n);
             for (int i = 0; i < list.size(); i++) {
@@ -129,16 +128,13 @@ public final class Main {
             for (String each: boundedNodes) {
               boundedWay.addAll(db.queryWayFromNode(each));
             }
-            
-            Iterator<String> itr = boundedWay.iterator();
-            while(itr.hasNext()){
-               System.out.println(itr.next());
-            } 
+            List<String> boundedWayList = new ArrayList<String>(boundedWay);
+            for (int i = boundedWayList.size()-1; i >=0; i--) {
+              System.out.println(boundedWayList.get(i));
+            }
+        } else {
+          System.out.println("ERROR: wrong command");
         }
-        
-        //if (!commands.contains(key)) {
-        //  System.out.println("ERROR: Wrong Command");
-        //}
       }
     } catch (IOException e) {
       System.out.println("ERROR: No command to read");

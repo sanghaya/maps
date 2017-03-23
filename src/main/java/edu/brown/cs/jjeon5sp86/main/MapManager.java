@@ -50,7 +50,6 @@ public class MapManager {
     } catch (SQLException e) {
       nodeList = null;
     }
-    System.out.println(nodeList);
     return nodeList;
   }
   
