@@ -133,6 +133,16 @@ public final class Main {
               System.out.println(boundedWayList.get(i));
             }
         } else if (tokens.get(0).equals("route")) {
+            /*
+            List<String> inters = db.getIntersection(tokens.get(1), tokens.get(2));
+            for (int i = 0; i < inters.size(); i++) {
+              System.out.println(inters.get(i));
+            }
+            List<String> inters2 = db.getIntersection(tokens.get(3), tokens.get(4));
+            for (int i = 0; i < inters2.size(); i++) {
+              System.out.println(inters2.get(i));
+            }
+            */
         	db.routeCommand(tokens, tree);
         } else {
           System.out.println("ERROR: wrong command");

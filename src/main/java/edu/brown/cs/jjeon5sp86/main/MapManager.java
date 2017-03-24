@@ -16,6 +16,7 @@ import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 
 import java.util.HashSet;
+import java.util.Iterator;
 
 
 public class MapManager {
@@ -84,6 +85,21 @@ public class MapManager {
 	  }
   }
   
+  public List<String> getIntersection(String id1, String id2) throws SQLException {
+    List<String> intersec = new ArrayList<String>();
+    Set<String> firstNodes = queryStartEnd(id1);
+    Set<String> secondNodes = queryStartEnd(id2);
+    Iterator<String> itr = firstNodes.iterator();
+    while (itr.hasNext()) {
+      String id = itr.next();
+      if (secondNodes.contains(id)) {
+        intersec.add(id);
+      }
+    }
+    return intersec;
+  }
+
+
   public List<DNode> getNeighbors(DNode n) throws SQLException {
 	  List<DNode> neighbors = new ArrayList<DNode>();
 	  
@@ -132,6 +148,27 @@ public class MapManager {
       nodeList = null;
     }
     return nodeList;
+  }
+
+  
+  public Set<String> queryStartEnd(String name) throws SQLException {
+    Set<String> endList = new HashSet<>();
+    try {
+      PreparedStatement prep;
+      prep = conn.prepareStatement(
+              "SELECT start, end FROM way WHERE name = ?");
+      prep.setString(1, name);
+      ResultSet rs = prep.executeQuery();
+      while (rs.next()) {
+        endList.add(rs.getString(1));
+        endList.add(rs.getString(2));
+      }
+      rs.close();
+      prep.close();
+    } catch (SQLException e) {
+      endList = null;
+    }
+    return endList;
   }
   
   public Set<String> queryNodes() throws SQLException {
