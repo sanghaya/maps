@@ -132,6 +132,8 @@ public final class Main {
             for (int i = boundedWayList.size()-1; i >=0; i--) {
               System.out.println(boundedWayList.get(i));
             }
+        } else if (tokens.get(0).equals("route")) {
+        	db.routeCommand(tokens, tree);
         } else {
           System.out.println("ERROR: wrong command");
         }

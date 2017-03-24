@@ -9,37 +9,39 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import edu.brown.cs.jjeon5sp86.main.MapManager;
+
 public class Dijkstra {
 
-  private BaconManager bm;
+  private MapManager bm;
 
-  public Dijkstra(BaconManager bm) {
-    this.bm = bm;
+  public Dijkstra(MapManager mapManager) {
+    this.bm = mapManager;
   }
 
-  public BaconNode findPath(BaconNode start, BaconNode end) throws SQLException {
+  public DNode findPath(DNode start, DNode end) throws SQLException {
     Map<String, Double> frontierWeights = new HashMap<String, Double>();
 
-    PriorityQueue<BaconNode> frontier = new PriorityQueue<BaconNode>(11,
-        new Comparator<BaconNode>() {
+    PriorityQueue<DNode> frontier = new PriorityQueue<DNode>(11,
+        new Comparator<DNode>() {
           @Override
-          public int compare(BaconNode a, BaconNode b) {
+          public int compare(DNode a, DNode b) {
             return Double.compare(a.getWeight(), b.getWeight());
           }
         });
     frontier.add(start);
 
-    Set<BaconNode> explored = new HashSet<BaconNode>();
+    Set<DNode> explored = new HashSet<DNode>();
 
     while (frontier.size() != 0) {
-      BaconNode node = frontier.poll();
+      DNode node = frontier.poll();
       // System.out.println(node.getName());
       if (node.getId().equals(end.getId())) {
         return node;
       }
       explored.add(node);
-      List<BaconNode> neighbors = bm.getNeighbors(node);
-      for (BaconNode n : neighbors) {
+      List<DNode> neighbors = bm.getNeighbors(node);
+      for (DNode n : neighbors) {
         if (!explored.contains(n) && !frontier.contains(n)) {
           n.setWeight(node.getWeight() + n.getWeight());
           frontierWeights.put(n.getId(), n.getWeight());
