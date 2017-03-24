@@ -40,7 +40,17 @@ public class MapManager {
   }
   
   public void routeCommand(List<String> tokens, KDTree<Node> tree) {
-	  if (tokens.size() == 5) {
+	  
+	  int mode = 0;
+	  try {
+		  Double.parseDouble(tokens.get(1));
+	  } catch(Exception e) {
+		  mode = 1;
+	  }
+	  
+	  DNode start = null;
+	  DNode end = null;
+	  if (mode == 0) {
 		  Node n1 = new Node("testpt", tokens.get(1), tokens.get(2));
 		  Node n2 = new Node("testpt2", tokens.get(3), tokens.get(4));
           List<Node> list = tree.findNearest(1, n1);
@@ -48,41 +58,59 @@ public class MapManager {
           Node a = list.get(0);
           Node b = list2.get(0);
           
-          try {
-        	  DNode start = new DNode(a.getId(), Double.parseDouble(tokens.get(1)), 
+          
+        	  start = new DNode(a.getId(), Double.parseDouble(tokens.get(1)), 
         			  Double.parseDouble(tokens.get(2)), "", null, 0);
-        	  DNode end = new DNode(b.getId(), Double.parseDouble(tokens.get(3)), 
+        	  end = new DNode(b.getId(), Double.parseDouble(tokens.get(3)), 
         			  Double.parseDouble(tokens.get(4)), "", null, 0);
 
-              Dijkstra dj = new Dijkstra(this);
-              DNode n = dj.findPath(start, end);
-
-              if (n == null) {
-                System.out.println(start.getId() + " -/- " + end.getId());
-                //return "";
-              }
-
-              DNode current = n;
-              List<String> output = new ArrayList<String>();
-              while (current.getPrevious() != null) {
-                String s = current.getPrevious().getId() + " -> " + current.getId()
-                    + " : " + current.getPath();
-                output.add(s);
-                current = current.getPrevious();
-              }
-
-              //String toReturn = "";
-              for (int i = output.size() - 1; i >= 0; i--) {
-                //toReturn += output.get(i) + "\n";
-                System.out.println(output.get(i));
-              }
-          } catch (Exception e) {
-              System.out.println("ERROR: error in searching");
-              e.printStackTrace(System.out);
-          }
 	  } else {
+		  try {
+			  String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
+			  String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);
+			  
+			  List<String> latlon1 = queryLatLon(id1);
+			  List<String> latlon2 = queryLatLon(id2);
+			  
+			  start = new DNode(id1, Double.parseDouble(latlon1.get(0)), 
+        			  Double.parseDouble(latlon1.get(1)), "", null, 0);
+			  end = new DNode(id2, Double.parseDouble(latlon2.get(0)), 
+        			  Double.parseDouble(latlon2.get(1)), "", null, 0);
+			  
+		  } catch (Exception e) {
+			  
+		  }
 		  
 	  }
+	  
+	  try {
+		  Dijkstra dj = new Dijkstra(this);
+	      DNode n = dj.findPath(start, end);
+
+	      if (n == null) {
+	        System.out.println(start.getId() + " -/- " + end.getId());
+	        //return "";
+	      }
+
+	      DNode current = n;
+	      List<String> output = new ArrayList<String>();
+	      while (current.getPrevious() != null) {
+	        String s = current.getPrevious().getId() + " -> " + current.getId()
+	            + " : " + current.getPath();
+	        output.add(s);
+	        current = current.getPrevious();
+	      }
+
+	      //String toReturn = "";
+	      for (int i = output.size() - 1; i >= 0; i--) {
+	        //toReturn += output.get(i) + "\n";
+	        System.out.println(output.get(i));
+	      }
+	  } catch (Exception e) {
+		  
+	  }
+	  
+	  
   }
   
   public List<String> getIntersection(String id1, String id2) throws SQLException {
