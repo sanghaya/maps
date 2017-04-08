@@ -65,8 +65,8 @@ $(document).ready(() => {
     $.post("/getWays", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
             const responseObject = JSON.parse(responseJSON);
             map = responseObject.ways;
-            console.log(map);  
-            scale(1.4);
+            //console.log(map);
+            scale(1.5);
             draw();
     });
 });
@@ -93,7 +93,8 @@ function scale(n) {
 
 function draw() {
 
-    for (let way in map) {
+    for (let way of map) {
+        //console.log(way)
         const start = [parseFloat(way[1]), parseFloat(way[2])];
         const end = [parseFloat(way[3]), parseFloat(way[4])];
 
