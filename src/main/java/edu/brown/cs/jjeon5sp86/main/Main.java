@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -89,8 +91,6 @@ public final class Main {
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
-        Set<String> wayNodes;
-        
         if (tokens.get(0).equals("map")) {
         	db.setupDB(tokens.get(1));
             Set<String> traversable = db.queryWays();
@@ -109,29 +109,7 @@ public final class Main {
               System.out.println(list.get(i).getId());
             }
         } else if (tokens.get(0).equals("ways")) {
-            Double lat1 = Double.valueOf(tokens.get(1));
-            Double lat2 = Double.valueOf(tokens.get(3));
-            Double lon1 = Double.valueOf(tokens.get(2));
-            Double lon2 = Double.valueOf(tokens.get(4));
-            Set<String> boundedNodes = new HashSet<String>();
-            Set<String> boundedWay = new HashSet<String>();
-            wayNodes = db.queryNodes();
-            
-            for (String each: wayNodes) {
-              List<String> latlon = db.queryLatLon(each);
-              Double latTarget = Double.valueOf(latlon.get(0));
-              Double lonTarget = Double.valueOf(latlon.get(1));
-              if ((latTarget <= lat1 && latTarget >= lat2) && (lonTarget >= lon1 && lonTarget <= lon2)) {
-                boundedNodes.add(each);
-              }
-            }
-            for (String each: boundedNodes) {
-              boundedWay.addAll(db.queryWayFromNode(each));
-            }
-            List<String> boundedWayList = new ArrayList<String>(boundedWay);
-            for (int i = boundedWayList.size()-1; i >=0; i--) {
-              System.out.println(boundedWayList.get(i));
-            }
+          db.findBoundedWay(tokens);
         } else if (tokens.get(0).equals("route")) {
           db.routeCommand(tokens, tree);
         } else if (tokens.get(0).equals("suggest")) {
@@ -164,17 +142,34 @@ public final class Main {
 
     FreeMarkerEngine freeMarker = createEngine();
     Spark.get("/maps", new FrontHandler(), freeMarker);
+    Spark.post("/getWays", new ResultsHandler());
   }
   
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
-      List<Integer> ok = new ArrayList<Integer>();
-      ok.add(1);
-      ok.add(2);
       Map<String, Object> variables = ImmutableMap.of("title",
-              "Maps", "ways", ok);
+              "Maps", "result", "");
       return new ModelAndView(variables, "draw.ftl");
+    }
+  }
+  
+  private static class ResultsHandler implements Route {
+    @Override
+    public String handle(Request req, Response res) {
+      QueryParamsMap qm = req.queryMap();
+      Map<String, Object> variables = null;
+      try {
+    	  System.out.println(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
+    	  List<String> ways = db.findBoundedWay(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
+          Map<String, List<Double>> temp = new HashMap<String, List<Double>>();
+          temp = db.guiData(ways);
+          variables = ImmutableMap.of("ways", temp);
+      } catch (Exception e) {
+    	  System.out.println(e);
+      }
+      
+      return GSON.toJson(variables);
     }
   }
   
