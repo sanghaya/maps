@@ -1,5 +1,5 @@
 // map size
-const BOARD_SIZE = 500;
+const MAP_SIZE = 500;
 
 // Global reference to the canvas element.
 let canvas;
@@ -25,20 +25,78 @@ const convertToMatrix = str => {
 };
 
 */
+let map;
+let topleft;
+let botright;
+let scalex;
+let scaley;
 
 $(document).ready(() => {
 
     // Setting up the canvas.
-    canvas = $('#board')[0];
-    canvas.width = BOARD_SIZE
-    canvas.height = BOARD_SIZE
+    canvas = $('#map')[0];
+    canvas.width = MAP_SIZE
+    canvas.height = MAP_SIZE
 
     // TODO: Set up the canvas context.
     ctx = canvas.getContext("2d");
     console.log ("canvas created");
 
+    topleft = [41.828163, -71.404871];
+    botright = [41.825541, -71.400365];
+
+    map = 
+    {
+        "brown st": [41.827867, -71.403149, 41.827076, -71.403042],
+
+        "waterman st": [41.827076, -71.403042, 41.826900, -71.403200]
+
+    };
+
+    scale(1);
+    draw();
+
+    $.post("/getWays", {"start": [41.828163, -71.404871], "end": [41.825541, -71.400365]}, responseJSON => {
+            const responseObject = JSON.parse(responseJSON);
+            map = responseObject;
+            console.log(map);  
+    });
 });
 
+
+function toPixelx(node) {
+    return (node[1] - topleft[1]) * scalex;
+}
+
+function toPixely(node) {
+    return (topleft[0] - node[0]) * scaley;
+}
+
+function scale(n) {
+    topleft[0] = topleft[0] - (1 - n) / 2.0 * (topleft[0] - botright[0]);
+    topleft[1] = topleft[1] + (1 - n) / 2.0 * (botright[1] - topleft[1]);
+
+    botright[0] = botright[0] + (1 - n) / 2.0 * (topleft[0] - botright[0]);
+    botright[1] = botright[1] - (1 - n) / 2.0 * (botright[1] - topleft[1]);
+
+    scalex = 500.0 / Math.abs(topleft[1] - botright[1]);
+    scaley = 500.0 / Math.abs(topleft[0] - botright[0]);
+}
+
+function draw() {
+
+    for (let wayName in map) {
+        const way = map[wayName];
+        const start = [way[0], way[1]];
+        const end = [way[2], way[3]];
+
+        ctx.moveTo(toPixelx(start), toPixely(start));
+        ctx.lineTo(toPixelx(end), toPixely(end));
+        
+    }
+    ctx.stroke();
+    
+}
 /*
 
 Paints the boggle board.
