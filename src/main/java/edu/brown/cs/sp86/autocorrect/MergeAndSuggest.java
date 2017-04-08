@@ -38,11 +38,12 @@ public class MergeAndSuggest {
   public void readCorpus(String file) {
     textReader.fileRead(file);
   }
+ 
   /**
    * suggestions for actors.
    * @param trie Trie
    * @param actors set of actors
-   * @param line line to autocorrected
+   * @param line line to autocorrect
    * @return list of autocorrected input
    */
   public List<String> actorSuggetions(Trie trie,

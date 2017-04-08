@@ -11,7 +11,7 @@ public class TrieNode {
   private boolean isLeaf;
   private TrieNode[] children;
   private TrieNode parent;
-  private final int size = 26;
+  private final int size = 91;
 
   /**
    * empty constructor for root node.
@@ -91,7 +91,7 @@ public class TrieNode {
    * @param c set child with given letter c.
    */
   public void setChild(char c) {
-    int index = c - 'a';
+    int index = c - ' ';
     this.children[index] = new TrieNode(c);
   }
   /**

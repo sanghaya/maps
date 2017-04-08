@@ -19,6 +19,16 @@ import java.util.Iterator;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import spark.ExceptionHandler;
+import spark.ModelAndView;
+import spark.QueryParamsMap;
+import spark.Request;
+import spark.Response;
+import spark.Route;
+import spark.Spark;
+import spark.TemplateViewRoute;
+import spark.template.freemarker.FreeMarkerEngine;
+import freemarker.template.Configuration;
 
 import java.sql.SQLException;
 
@@ -39,7 +49,7 @@ import edu.brown.cs.sp86.autocorrect.ACCommand;
 public final class Main {
 
   private static final int DEFAULT_PORT = 4567;
-
+  private static final Gson GSON = new Gson();
   /**
    * The initial method called when execution begins.
    *
@@ -51,15 +61,10 @@ public final class Main {
     new Main(args).run();
   }
   private String[] args;
-  private ACCommand ac;
-  private static MergeAndSuggest mode;
-  private static Map<String, String> in;
   private static MapManager db;
 
 
   private Main(String[] args) {
-    mode = new MergeAndSuggest();
-    ac = new ACCommand();
     db = new MapManager();
     this.args = args;
   }
@@ -71,13 +76,11 @@ public final class Main {
     parser.accepts("port").withRequiredArg().ofType(Integer.class)
             .defaultsTo(DEFAULT_PORT);
     OptionSet options = parser.parse(args);
-    //boolean isGui = false;
     if (options.has("gui")) {
-      //runSparkServer((int) options.valueOf("port"));
-      //isGui = true;
+      runSparkServer((int) options.valueOf("port"));
     }
     //set of commands that are allowed
-    Set<String> commands = Stream.of("map").collect(Collectors.toSet());
+    //Set<String> commands = Stream.of("map").collect(Collectors.toSet());
     String line;
     BufferedReader cmds = new BufferedReader(
             new InputStreamReader(System.in));
@@ -94,15 +97,12 @@ public final class Main {
             List<Node> nodes = new ArrayList<Node>();
             for(String n:traversable) {
             	List<String> coordinates = db.queryLatLon(n);
-            	// System.out.println(coordinates);
             	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
             	nodes.add(node);
             }
             Node[] nodesArray = nodes.toArray(new Node[0]);
             tree = new KDTree<Node>(nodesArray);
-            //System.out.println(tree.getRoot().getObject().getId());
         } else if (tokens.get(0).equals("nearest")) {
-        	//System.out.println("nearest starting");
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
             List<Node> list = tree.findNearest(1, n);
             for (int i = 0; i < list.size(); i++) {
@@ -133,17 +133,9 @@ public final class Main {
               System.out.println(boundedWayList.get(i));
             }
         } else if (tokens.get(0).equals("route")) {
-            /*
-            List<String> inters = db.getIntersection(tokens.get(1), tokens.get(2));
-            for (int i = 0; i < inters.size(); i++) {
-              System.out.println(inters.get(i));
-            }
-            List<String> inters2 = db.getIntersection(tokens.get(3), tokens.get(4));
-            for (int i = 0; i < inters2.size(); i++) {
-              System.out.println(inters2.get(i));
-            }
-            */
-        	db.routeCommand(tokens, tree);
+          db.routeCommand(tokens, tree);
+        } else if (tokens.get(0).equals("suggest")) {
+          db.genSuggestions(tokens.get(1));
         } else {
           System.out.println("ERROR: wrong command");
         }
@@ -152,6 +144,54 @@ public final class Main {
       System.out.println("ERROR: No command to read");
     }
   }
+  private static FreeMarkerEngine createEngine() {
+    Configuration config = new Configuration();
+    File templates = new File("src/main/resources/spark/template/freemarker");
+    try {
+      config.setDirectoryForTemplateLoading(templates);
+    } catch (IOException ioe) {
+      System.out.printf("ERROR: Unable use %s for template loading.%n",
+              templates);
+      System.exit(1);
+    }
+    return new FreeMarkerEngine(config);
+  }
+  
+  private void runSparkServer(int port) {
+    Spark.port(port);
+    Spark.externalStaticFileLocation("src/main/resources/static");
+    Spark.exception(Exception.class, new ExceptionPrinter());
+
+    FreeMarkerEngine freeMarker = createEngine();
+    Spark.get("/maps", new FrontHandler(), freeMarker);
+  }
+  
+  private static class FrontHandler implements TemplateViewRoute {
+    @Override
+    public ModelAndView handle(Request req, Response res) {
+      List<Integer> ok = new ArrayList<Integer>();
+      ok.add(1);
+      ok.add(2);
+      Map<String, Object> variables = ImmutableMap.of("title",
+              "Maps", "ways", ok);
+      return new ModelAndView(variables, "draw.ftl");
+    }
+  }
+  
+  private static class ExceptionPrinter implements ExceptionHandler {
+    @Override
+    public void handle(Exception e, Request req, Response res) {
+      res.status(500);
+      StringWriter stacktrace = new StringWriter();
+      try (PrintWriter pw = new PrintWriter(stacktrace)) {
+        pw.println("<pre>");
+        e.printStackTrace(pw);
+        pw.println("</pre>");
+      }
+      res.body(stacktrace.toString());
+    }
+  }
+  
 
   private List<String> inputProcessor(String line) {
     List<String> list = new ArrayList<String>();

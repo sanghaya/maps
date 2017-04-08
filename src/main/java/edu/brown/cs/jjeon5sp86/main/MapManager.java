@@ -14,6 +14,8 @@ import edu.brown.cs.jjeon5.bacon.DNode;
 import edu.brown.cs.jjeon5.bacon.Dijkstra;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
+import edu.brown.cs.sp86.autocorrect.Trie;
+import edu.brown.cs.sp86.autocorrect.TrieNode;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -177,8 +179,7 @@ public class MapManager {
     }
     return nodeList;
   }
-
-  
+ 
   public Set<String> queryStartEnd(String name) throws SQLException {
     Set<String> endList = new HashSet<>();
     try {
@@ -256,5 +257,46 @@ public class MapManager {
       wayIdList = null;
     }
     return wayIdList;
+  }
+  
+  public List<String> genSuggestions(String inpt) throws SQLException {
+    Trie trie = new Trie();
+    Set<String> names = new HashSet<>();
+    List<String> candidates = new ArrayList<String>();
+    names = queryNames();
+    System.out.println(names);
+    //trie.insertWord(trie.getRoot(), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ");
+    trie = buildTrie(names);
+    candidates = trie.findWord(inpt);
+    for (String word: candidates) {
+      System.out.println(word);
+    }
+    return candidates;
+  }
+  
+  public Set<String> queryNames() throws SQLException {
+    Set<String> names = new HashSet<>();
+    try {
+      PreparedStatement prep;
+      prep = conn.prepareStatement(
+              "SELECT name FROM way");
+      ResultSet rs = prep.executeQuery();
+      while (rs.next()) {
+        names.add(rs.getString(1));
+      }
+      rs.close();
+      prep.close();
+    } catch (SQLException e) {
+      names = null;
+    }
+    return names;
+  }
+  
+  public Trie buildTrie(Set<String> names) {
+    Trie trie = new Trie();
+    for (String name: names) {
+      trie.insertWord(trie.getRoot(), name);
+    }
+    return trie;
   }
 }

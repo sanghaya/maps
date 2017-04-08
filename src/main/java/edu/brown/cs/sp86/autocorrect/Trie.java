@@ -29,12 +29,25 @@ public class Trie {
    * @param parent root of the node.
    * @param s string to be inserted into the Trie
    */
+  /*
   public void insertWord(TrieNode parent, String s) {
     if (s.isEmpty()) {
       return;
     }
     char letter = s.charAt(0);
-    int index = letter - 'a';
+    int index = letter - ' ';
+    System.out.println(letter + ": " + index);
+    insertWord(parent, s.substring(1));
+  }
+  */
+  
+  public void insertWord(TrieNode parent, String s) {
+    if (s.isEmpty()) {
+      return;
+    }
+    char letter = s.charAt(0);
+    int index = letter - ' ';
+   
     parent.setLeaf(false);
     if (parent.getChild(index) == null) {
       parent.setChild(letter);
@@ -58,7 +71,7 @@ public class Trie {
     TrieNode temp = null;
     while (s.length() != 0 && lastChar != null) {
       temp = lastChar;
-      lastChar = lastChar.getChild(s.charAt(0) - 'a');
+      lastChar = lastChar.getChild(s.charAt(0) - ' ');
       s = s.substring(1);
     }
     if (lastChar == null) {
