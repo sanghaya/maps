@@ -45,27 +45,29 @@ $(document).ready(() => {
     topleft = [41.828163, -71.404871];
     botright = [41.825541, -71.400365];
 
-    map = 
-    {
-        "brown st": [41.827867, -71.403149, 41.827076, -71.403042],
 
-        "waterman st": [41.827076, -71.403042, 41.826900, -71.403200]
+    // map = 
+    // {
+    //     ["brown st", 41.827867, -71.403149, 41.827076, -71.403042],
 
-    };
+    //     "waterman st": [41.827076, -71.403042, 41.826900, -71.403200]
 
-    scale(1);
-    draw();
+    // };
+
+    // scale(1);
+    // draw();
 
     // $.post("/getWays", {"start": [41.828163, -71.404871], "end": [41.825541, -71.400365]}, responseJSON => {
     //         const responseObject = JSON.parse(responseJSON);
     //         map = responseObject;
     //         console.log(map);  
     // });
-    const a = JSON.stringify(["41.828163", "-71.404871", "41.825541", "-71.400365"]);
-    $.post("/getWays", {"a": 41.828163, "b": -71.404871, "c": 41.825541, "d": -71.400365}, responseJSON => {
+    $.post("/getWays", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
             const responseObject = JSON.parse(responseJSON);
-            map = responseObject;
+            map = responseObject.ways;
             console.log(map);  
+            scale(1.4);
+            draw();
     });
 });
 
@@ -91,10 +93,9 @@ function scale(n) {
 
 function draw() {
 
-    for (let wayName in map) {
-        const way = map[wayName];
-        const start = [way[0], way[1]];
-        const end = [way[2], way[3]];
+    for (let way in map) {
+        const start = [parseFloat(way[1]), parseFloat(way[2])];
+        const end = [parseFloat(way[3]), parseFloat(way[4])];
 
         ctx.moveTo(toPixelx(start), toPixely(start));
         ctx.lineTo(toPixelx(end), toPixely(end));
