@@ -7,8 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.HashMap;
 
 import edu.brown.cs.jjeon5.bacon.DNode;
 import edu.brown.cs.jjeon5.bacon.Dijkstra;
@@ -200,6 +202,27 @@ public class MapManager {
     return endList;
   }
   
+  public List<String> queryFromId(String id) throws SQLException {
+    List<String> nodes = new ArrayList<>();
+    try {
+      PreparedStatement prep;
+      prep = conn.prepareStatement(
+              "SELECT name, start, end FROM way WHERE id = ?");
+      prep.setString(1, id);
+      ResultSet rs = prep.executeQuery();
+      while (rs.next()) {
+        nodes.add(rs.getString(1));
+        nodes.add(rs.getString(2));
+        nodes.add(rs.getString(3));
+      }
+      rs.close();
+      prep.close();
+    } catch (SQLException e) {
+      nodes = null;
+    }
+    return nodes;
+  }
+  
   public Set<String> queryNodes() throws SQLException {
     Set<String> nodeList = new HashSet<>();
     try {
@@ -290,6 +313,51 @@ public class MapManager {
       names = null;
     }
     return names;
+  }
+    
+  public List<String> findBoundedWay(List<String> tokens) throws SQLException {
+    Double lat1 = Double.valueOf(tokens.get(1));
+    Double lat2 = Double.valueOf(tokens.get(3));
+    Double lon1 = Double.valueOf(tokens.get(2));
+    Double lon2 = Double.valueOf(tokens.get(4));
+    Set<String> boundedNodes = new HashSet<String>();
+    Set<String> boundedWay = new HashSet<String>();
+    Set<String >wayNodes = new HashSet<String>();
+    wayNodes = queryNodes();
+    
+    for (String each: wayNodes) {
+      List<String> latlon = queryLatLon(each);
+      Double latTarget = Double.valueOf(latlon.get(0));
+      Double lonTarget = Double.valueOf(latlon.get(1));
+      if ((latTarget <= lat1 && latTarget >= lat2) && (lonTarget >= lon1 && lonTarget <= lon2)) {
+        boundedNodes.add(each);
+      }
+    }
+    for (String each: boundedNodes) {
+      boundedWay.addAll(queryWayFromNode(each));
+    }
+    List<String> boundedWayList = new ArrayList<String>(boundedWay);
+    for (int i = boundedWayList.size()-1; i >=0; i--) {
+      System.out.println(boundedWayList.get(i));
+    }
+    return boundedWayList;
+  }
+  
+  public Map<String, List<Double>> guiData(List<String> wayId) throws SQLException {
+    List<String> nodes = new ArrayList<>();
+    Map<String, List<Double>> data = new HashMap<String, List<Double>>();
+    for (String id: wayId) {
+      nodes = queryFromId(id);
+      List<Double> coords = new ArrayList<Double>();
+      List<String> start = queryLatLon(nodes.get(1));
+      List<String> end = queryLatLon(nodes.get(2));
+      coords.add(Double.parseDouble(start.get(0)));
+      coords.add(Double.parseDouble(start.get(1)));
+      coords.add(Double.parseDouble(end.get(0)));
+      coords.add(Double.parseDouble(end.get(1)));
+      data.put(nodes.get(0), coords);
+    }
+    return data;
   }
   
   public Trie buildTrie(Set<String> names) {
