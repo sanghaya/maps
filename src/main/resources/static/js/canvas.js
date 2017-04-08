@@ -64,8 +64,10 @@ $(document).ready(() => {
     const a = JSON.stringify(["41.828163", "-71.404871", "41.825541", "-71.400365"]);
     $.post("/getWays", {"a": 41.828163, "b": -71.404871, "c": 41.825541, "d": -71.400365}, responseJSON => {
             const responseObject = JSON.parse(responseJSON);
-            map = responseObject;
-            console.log(map);  
+            map = responseObject.ways;
+            console.log(map);
+            scale(1);
+            draw();
     });
 });
 

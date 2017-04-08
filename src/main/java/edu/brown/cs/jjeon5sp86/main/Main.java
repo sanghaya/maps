@@ -109,7 +109,7 @@ public final class Main {
               System.out.println(list.get(i).getId());
             }
         } else if (tokens.get(0).equals("ways")) {
-          db.findBoundedWay(tokens);
+          db.findBoundedWay(tokens.subList(1, 5));
         } else if (tokens.get(0).equals("route")) {
           db.routeCommand(tokens, tree);
         } else if (tokens.get(0).equals("suggest")) {
@@ -162,7 +162,7 @@ public final class Main {
       try {
     	  System.out.println(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
     	  List<String> ways = db.findBoundedWay(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
-          Map<String, List<Double>> temp = new HashMap<String, List<Double>>();
+    	  List<List<String>> temp = new ArrayList<List<String>>();
           temp = db.guiData(ways);
           variables = ImmutableMap.of("ways", temp);
       } catch (Exception e) {

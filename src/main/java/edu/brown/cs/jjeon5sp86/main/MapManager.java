@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.HashMap;
 
@@ -223,12 +224,16 @@ public class MapManager {
     return nodes;
   }
   
-  public Set<String> queryNodes() throws SQLException {
+  public Set<String> queryNodes(Double lat1, Double lon1, Double lat2, Double lon2) throws SQLException {
     Set<String> nodeList = new HashSet<>();
     try {
       PreparedStatement prep;
       prep = conn.prepareStatement(
-              "SELECT id FROM node");
+              "SELECT id FROM node WHERE latitude > ? AND latitude < ? AND longitude < ? And longitude > ?");
+      prep.setDouble(1, lat2);
+      prep.setDouble(2, lat1);
+      prep.setDouble(3, lon2);
+      prep.setDouble(4, lon1);
       ResultSet rs = prep.executeQuery();
       while (rs.next()) {
         nodeList.add(rs.getString(1));
@@ -322,42 +327,34 @@ public class MapManager {
     Double lon2 = Double.valueOf(tokens.get(3));
     Set<String> boundedNodes = new HashSet<String>();
     Set<String> boundedWay = new HashSet<String>();
-    Set<String >wayNodes = new HashSet<String>();
-    wayNodes = queryNodes();
-    
-    for (String each: wayNodes) {
-      List<String> latlon = queryLatLon(each);
-      Double latTarget = Double.valueOf(latlon.get(0));
-      Double lonTarget = Double.valueOf(latlon.get(1));
-      if ((latTarget <= lat1 && latTarget >= lat2) && (lonTarget >= lon1 && lonTarget <= lon2)) {
-        boundedNodes.add(each);
-      }
-    }
+    boundedNodes = queryNodes(lat1, lon1, lat2, lon2);
+   
     for (String each: boundedNodes) {
       boundedWay.addAll(queryWayFromNode(each));
     }
     List<String> boundedWayList = new ArrayList<String>(boundedWay);
-    for (int i = boundedWayList.size()-1; i >=0; i--) {
-      System.out.println(boundedWayList.get(i));
-    }
+    //for (int i = boundedWayList.size()-1; i >=0; i--) {
+      //System.out.println(boundedWayList.get(i));
+    //}
     return boundedWayList;
   }
   
-  public Map<String, List<Double>> guiData(List<String> wayId) throws SQLException {
+  public List<List<String>> guiData(List<String> wayId) throws SQLException {
     List<String> nodes = new ArrayList<>();
-    Map<String, List<Double>> data = new HashMap<String, List<Double>>();
+    List<List<String>> ways = new ArrayList<List<String>>(); 
     for (String id: wayId) {
+      List<String> inpt = new ArrayList<>();
       nodes = queryFromId(id);
-      List<Double> coords = new ArrayList<Double>();
       List<String> start = queryLatLon(nodes.get(1));
       List<String> end = queryLatLon(nodes.get(2));
-      coords.add(Double.parseDouble(start.get(0)));
-      coords.add(Double.parseDouble(start.get(1)));
-      coords.add(Double.parseDouble(end.get(0)));
-      coords.add(Double.parseDouble(end.get(1)));
-      data.put(nodes.get(0), coords);
+      inpt.add(nodes.get(0));
+      inpt.add(start.get(0));
+      inpt.add(start.get(1));
+      inpt.add(end.get(0));
+      inpt.add(end.get(1));
+      ways.add(inpt);
     }
-    return data;
+    return ways;
   }
   
   public Trie buildTrie(Set<String> names) {
