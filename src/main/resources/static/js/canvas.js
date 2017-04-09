@@ -7,29 +7,12 @@ let canvas;
 // Global reference to the canvas' context.
 let ctx;
 
-/*
-// Global reference to a 2D array that contains
-// the letters of the Boggle board.
-let letterGrid;
-
-// Converts a string representation of a Boggle board
-// (e.g. oksr\ncngl\nmwhy\noovw) to a 2D array
-const convertToMatrix = str => {
-	const rows = str.split('\n');
-	return rows.map( row => {
-		const letters = row.split('');
-		return letters.map(l => {
-			return l === 'q' ? 'Qu' : l.toUpperCase();
-		});
-	});
-};
-
-*/
 let map;
 let topleft;
 let botright;
 let scalex;
 let scaley;
+let twopoints = [];
 
 $(document).ready(() => {
 
@@ -40,35 +23,21 @@ $(document).ready(() => {
 
     // TODO: Set up the canvas context.
     ctx = canvas.getContext("2d");
+    overlay = canvas.getContext("2d");
     console.log ("canvas created");
 
     topleft = [41.828163, -71.404871];
     botright = [41.825541, -71.400365];
 
-
-    // map = 
-    // {
-    //     ["brown st", 41.827867, -71.403149, 41.827076, -71.403042],
-
-    //     "waterman st": [41.827076, -71.403042, 41.826900, -71.403200]
-
-    // };
-
-    // scale(1);
-    // draw();
-
-    // $.post("/getWays", {"start": [41.828163, -71.404871], "end": [41.825541, -71.400365]}, responseJSON => {
-    //         const responseObject = JSON.parse(responseJSON);
-    //         map = responseObject;
-    //         console.log(map);  
-    // });
-    $.post("/getWays", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
+    $.post("/getInitial", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
             const responseObject = JSON.parse(responseJSON);
             map = responseObject.ways;
-            //console.log(map);
-            scale(1.5);
+            scale(1);
             draw();
+            console.log("hihi")
     });
+
+    $('#map').click(pointOnClick);
 });
 
 
@@ -87,9 +56,18 @@ function scale(n) {
     botright[0] = botright[0] + (1 - n) / 2.0 * (topleft[0] - botright[0]);
     botright[1] = botright[1] - (1 - n) / 2.0 * (botright[1] - topleft[1]);
 
-    scalex = 500.0 / Math.abs(topleft[1] - botright[1]);
-    scaley = 500.0 / Math.abs(topleft[0] - botright[0]);
+    scalex = MAP_SIZE / Math.abs(topleft[1] - botright[1]);
+    scaley = MAP_SIZE / Math.abs(topleft[0] - botright[0]);
 }
+
+function descaleX(x) {
+	return x * 1/scalex;
+}
+
+function descaleY(y) {
+	return y * 1/scaley;
+}
+
 
 function draw() {
 
@@ -102,8 +80,31 @@ function draw() {
         ctx.lineTo(toPixelx(end), toPixely(end));
         
     }
+    ctx.strokeStyle = 'black'
     ctx.stroke();
     
+}
+
+function highlight() {
+
+    ctx.beginPath();
+    for (let path of shortest) {
+        const st = [parseFloat(path[0]), parseFloat(path[1])];
+        const en = [parseFloat(path[2]), parseFloat(path[3])];
+        console.log(st)
+        console.log(en)
+        ctx.moveTo(toPixelx(st), toPixely(st));
+        ctx.lineTo(toPixelx(en), toPixely(en));
+        
+    }
+    ctx.strokeStyle = 'yellow'
+    ctx.stroke();
+}
+
+function clear() {
+    for (let node of twopoints)
+        console.log(node)
+        ctx.clearRect(toPixelx(node), toPixely(node), 5, 5);
 }
 /*
 
@@ -159,50 +160,45 @@ const paintBoard = () => {
 	This function does two things if the click was valid:
 	- Paints the clicked square on the board
 	- Draws a path from the previous click to the current click
-const paintOnClick = event => {
+*/
+
+const pointOnClick = event => {
 
 	// Get the x, y coordinates of the click event
 	// with (0, 0) being the top left corner of canvas.
-    const x = event.pageX - canvas.offsetLeft;
-    const y = event.pageY - canvas.offsetTop;
+    const x = event.pageX 
+    const y = event.pageY
 
-    // TODO: Use these x, y coordinates to determine
-    // the row and column of the clicked tile.
-    const col = Math.floor(x / 100);
-    const row = Math.floor(y / 100);
- 
-    const currPosition = new Position(row, col);
-    const lastPosition = positions[positions.length-1];
+	const realX = topleft[1] + descaleX(x)
+	const realY = topleft[0] - descaleY(y)
 
-    if (positions.length === 0 || isValidClick(lastPosition, currPosition)) {
+    $.post("/getNearest", {"lat": realY, "lon": realX}, responseJSON => {
+        const responseObject = JSON.parse(responseJSON);
+        coord = responseObject.point;
+        const point = [parseFloat(coord["lat"]), parseFloat(coord["lon"])];
+        if (point !== null) {
+            twopoints.push(point)
+        }
+        console.log(twopoints)
+        console.log(twopoints.length)
 
-    	const letter = letterGrid[row][col];
+        ctx.fillStyle = "Red";
+        ctx.fillRect(toPixelx(point), toPixely(point), 5, 5);
 
-    	// TODO: Using the row and col variables, change the color of the
-    	// clicked tile with ctx.fillRect() and ctx.fillText().
+        if (twopoints.length === 2) {
+            $.post("/getPathFromNode", {"a": twopoints[0][0], "b": twopoints[0][1], "c": twopoints[1][0], "d": twopoints[1][1]}, responseJSON => {
+                const responseObject = JSON.parse(responseJSON);
+                shortest = responseObject.ways;
+                console.log(shortest)
+                if (shortest === []) {
+                    alert("Path doesn't exist!");
+                }
+                highlight();
+            })
+            setTimeout(clear, 3000);
+            twopoints = [];
+        }
+    });
 
-    	ctx.fillStyle = "Green";
-    	ctx.fillRect(col*TILE_SIZE, row*TILE_SIZE, 100, 100);
-    	ctx.fillStyle = "white";
-    	ctx.fillText(letterGrid[row][col], col*TILE_SIZE+50, (row+1)*TILE_SIZE-50);
-
-
-	    ctx.lineWidth = 10;
-
-	    // Drawing the path from the previous click to the current click.
-    	if (positions.length === 0) { // Is first click
-    		ctx.beginPath();
-	        ctx.moveTo(x, y);
-	        currWord += letter.toLowerCase();
-	        positions.push(currPosition);
-	    } else if (isValidClick(lastPosition, currPosition)) {
-	        ctx.lineTo(x, y);
-	        ctx.stroke();
-	        currWord += letter.toLowerCase();
-	        positions.push(currPosition);
-	    }
-
-    }
-}
-*/
+};
 

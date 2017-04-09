@@ -80,9 +80,9 @@ fieldset {
 
 textarea {
     resize: vertical;
-    width: 500px;
+    width: 300px;
+    margin-bottom:30px;
     margin-left: 10px;
-    margin-bottom:120px;
 }
 
 

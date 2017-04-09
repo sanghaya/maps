@@ -44,8 +44,8 @@ public class MapManager {
     }
   }
   
-  public void routeCommand(List<String> tokens, KDTree<Node> tree) {
-	  
+  public List<List<String>> routeCommand(List<String> tokens, KDTree<Node> tree) {
+	  List<List<String>> ways = new ArrayList<List<String>>();
 	  int mode = 0;
 	  try {
 		  Double.parseDouble(tokens.get(1));
@@ -62,13 +62,10 @@ public class MapManager {
           List<Node> list2 = tree.findNearest(1, n2);
           Node a = list.get(0);
           Node b = list2.get(0);
-          
-          
         	  start = new DNode(a.getId(), Double.parseDouble(tokens.get(1)), 
         			  Double.parseDouble(tokens.get(2)), "", null, 0);
         	  end = new DNode(b.getId(), Double.parseDouble(tokens.get(3)), 
         			  Double.parseDouble(tokens.get(4)), "", null, 0);
-
 	  } else {
 		  try {
 			  String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
@@ -83,39 +80,40 @@ public class MapManager {
         			  Double.parseDouble(latlon2.get(1)), "", null, 0);
 			  
 		  } catch (Exception e) {
-			  
+			  System.out.println(e);
 		  }
-		  
 	  }
-	  
 	  try {
 		  Dijkstra dj = new Dijkstra(this);
 	      DNode n = dj.findPath(start, end);
-
 	      if (n == null) {
 	        System.out.println(start.getId() + " -/- " + end.getId());
-	        //return "";
 	      }
-
 	      DNode current = n;
 	      List<String> output = new ArrayList<String>();
 	      while (current.getPrevious() != null) {
+	        List<String> one;
+	        List<String> two;
+	        List<String> eachPath = new ArrayList<>();
 	        String s = current.getPrevious().getId() + " -> " + current.getId()
 	            + " : " + current.getPath();
 	        output.add(s);
+	        one = queryLatLon(current.getPrevious().getId());
+	        two = queryLatLon(current.getId());
+	        eachPath.add(one.get(0));
+	        eachPath.add(one.get(1));
+	        eachPath.add(two.get(0));
+	        eachPath.add(two.get(1));
+	        ways.add(eachPath);
 	        current = current.getPrevious();
 	      }
-
-	      //String toReturn = "";
 	      for (int i = output.size() - 1; i >= 0; i--) {
-	        //toReturn += output.get(i) + "\n";
 	        System.out.println(output.get(i));
 	      }
 	  } catch (Exception e) {
-		  
+		  //System.out.println(e);
 	  }
-	  
-	  
+	  return ways;
   }
   
   public List<String> getIntersection(String id1, String id2) throws SQLException {
@@ -333,9 +331,9 @@ public class MapManager {
       boundedWay.addAll(queryWayFromNode(each));
     }
     List<String> boundedWayList = new ArrayList<String>(boundedWay);
-    //for (int i = boundedWayList.size()-1; i >=0; i--) {
-      //System.out.println(boundedWayList.get(i));
-    //}
+    for (int i = boundedWayList.size()-1; i >=0; i--) {
+      System.out.println(boundedWayList.get(i));
+    }
     return boundedWayList;
   }
   

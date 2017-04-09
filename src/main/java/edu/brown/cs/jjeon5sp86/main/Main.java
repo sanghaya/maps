@@ -64,11 +64,14 @@ public final class Main {
   }
   private String[] args;
   private static MapManager db;
+  private static KDTree<Node> tree;
 
 
   private Main(String[] args) {
     db = new MapManager();
+    tree = null;
     this.args = args;
+    
   }
 
   private void run() throws SQLException {
@@ -87,7 +90,7 @@ public final class Main {
     BufferedReader cmds = new BufferedReader(
             new InputStreamReader(System.in));
     try {
-    	KDTree<Node> tree = null;
+    	//KDTree<Node> tree = null;
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
@@ -102,6 +105,7 @@ public final class Main {
             }
             Node[] nodesArray = nodes.toArray(new Node[0]);
             tree = new KDTree<Node>(nodesArray);
+            System.out.println("done");
         } else if (tokens.get(0).equals("nearest")) {
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
             List<Node> list = tree.findNearest(1, n);
@@ -142,14 +146,16 @@ public final class Main {
 
     FreeMarkerEngine freeMarker = createEngine();
     Spark.get("/maps", new FrontHandler(), freeMarker);
-    Spark.post("/getWays", new ResultsHandler());
+    Spark.post("/getInitial", new ResultsHandler());
+    Spark.post("/getNearest", new NearHandler());
+    Spark.post("/getPathFromNode", new PathHandler());
   }
   
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
       Map<String, Object> variables = ImmutableMap.of("title",
-              "Maps", "result", "");
+              "Maps");
       return new ModelAndView(variables, "draw.ftl");
     }
   }
@@ -160,7 +166,6 @@ public final class Main {
       QueryParamsMap qm = req.queryMap();
       Map<String, Object> variables = null;
       try {
-    	  System.out.println(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
     	  List<String> ways = db.findBoundedWay(Arrays.asList(qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
     	  List<List<String>> temp = new ArrayList<List<String>>();
           temp = db.guiData(ways);
@@ -168,10 +173,44 @@ public final class Main {
       } catch (Exception e) {
     	  System.out.println(e);
       }
-      
       return GSON.toJson(variables);
     }
   }
+  
+  private static class NearHandler implements Route {
+    @Override
+    public String handle(Request req, Response res) {
+      QueryParamsMap qm = req.queryMap();
+      Map<String, Object> variables = null;
+      try {
+        Node n = new Node("testpt", qm.value("lat"), qm.value("lon"));
+        System.out.println(n.toString());
+        List<Node> list = tree.findNearest(1, n);
+        System.out.println(list);
+        variables = ImmutableMap.of("point", list.get(0));
+      } catch (Exception e) {
+          System.out.println(e);
+      }
+      return GSON.toJson(variables);
+    }
+  }
+  
+  private static class PathHandler implements Route {
+    @Override
+    public String handle(Request req, Response res) {
+      QueryParamsMap qm = req.queryMap();
+      Map<String, Object> variables = null;
+      List<List<String>> ways = new ArrayList<>();
+      try {
+        ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")), tree);
+        variables = ImmutableMap.of("ways", ways);
+      } catch (Exception e) {
+          System.out.println(e);
+      }
+      return GSON.toJson(variables);
+    }
+  }
+  
   
   private static class ExceptionPrinter implements ExceptionHandler {
     @Override
