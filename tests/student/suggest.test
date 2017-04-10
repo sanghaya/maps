@@ -1,0 +1,7 @@
+INPUT
+map data/maps/smallMaps.sqlite3
+suggest Chihiro
+OUTPUT
+map set to data/maps/smallMaps.sqlite3
+Chihiro Ave
+END

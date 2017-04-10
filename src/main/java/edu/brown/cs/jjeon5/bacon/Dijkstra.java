@@ -10,19 +10,33 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import edu.brown.cs.jjeon5sp86.main.MapManager;
-
+/**
+ * Dijkstra class.
+ * @author sangha
+ *
+ */
 public class Dijkstra {
 
   private MapManager bm;
-
+  private final int size = 11;
+  /**
+   *
+   * @param mapManager db that runs queries.
+   */
   public Dijkstra(MapManager mapManager) {
     this.bm = mapManager;
   }
-
+  /**
+   *
+   * @param start starting dnode
+   * @param end ending dnode
+   * @return dnode
+   * @throws SQLException thrown for SQLError
+   */
   public DNode findPath(DNode start, DNode end) throws SQLException {
     Map<String, Double> frontierWeights = new HashMap<String, Double>();
 
-    PriorityQueue<DNode> frontier = new PriorityQueue<DNode>(11,
+    PriorityQueue<DNode> frontier = new PriorityQueue<DNode>(size,
         new Comparator<DNode>() {
           @Override
           public int compare(DNode a, DNode b) {
@@ -35,7 +49,6 @@ public class Dijkstra {
 
     while (frontier.size() != 0) {
       DNode node = frontier.poll();
-      // System.out.println(node.getName());
       if (node.getId().equals(end.getId())) {
         return node;
       }

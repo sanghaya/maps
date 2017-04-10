@@ -1,0 +1,7 @@
+INPUT
+map data/maps/smallMaps.sqlite3
+route "Kamaji Pl" "Chihiro Ave" "Sootball Ln" "Yubaba St"
+OUTPUT
+map set to data/maps/smallMaps.sqlite3
+/n/2 -/- /n/4
+END

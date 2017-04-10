@@ -297,7 +297,7 @@ public class MapManager {
     candidates = trie.findWord(inpt);
     for (int i = 0; i < candidates.size(); i++) {
      System.out.println(candidates.get(i));
-     if (i > 3) {
+     if (i > 2) {
        return candidates.subList(0, 3);
      }
     }

@@ -7,17 +7,11 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -37,11 +31,8 @@ import java.sql.SQLException;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
-import edu.brown.cs.sp86.autocorrect.MergeAndSuggest;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
-import edu.brown.cs.jjeon5.stars.Star;
-import edu.brown.cs.sp86.autocorrect.Trie;
 
 /**
  * The Main class of our project. This is where execution begins.
@@ -65,13 +56,13 @@ public final class Main {
   private String[] args;
   private static MapManager db;
   private static KDTree<Node> tree;
-
+  private static MapCommand map;
 
   private Main(String[] args) {
     db = new MapManager();
     tree = null;
-    this.args = args;
-    
+    map = new MapCommand(db, tree);
+    this.args = args;   
   }
 
   private void run() throws SQLException {
@@ -84,48 +75,14 @@ public final class Main {
     if (options.has("gui")) {
       runSparkServer((int) options.valueOf("port"));
     }
-    //set of commands that are allowed
-    //Set<String> commands = Stream.of("map").collect(Collectors.toSet());
     String line;
     BufferedReader cmds = new BufferedReader(
             new InputStreamReader(System.in));
     try {
-    	//KDTree<Node> tree = null;
-        Trie trie = null;
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
-        if (tokens.get(0).equals("map")) {
-        	db.setupDB(tokens.get(1));
-            Set<String> traversable = db.queryWays();
-            List<Node> nodes = new ArrayList<Node>();
-            for(String n:traversable) {
-            	List<String> coordinates = db.queryLatLon(n);
-            	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
-            	nodes.add(node);
-            }
-            Node[] nodesArray = nodes.toArray(new Node[0]);
-            tree = new KDTree<Node>(nodesArray);
-            //populate Trie
-            Set<String> names = db.queryNames();
-            db.buildTrie(names);
-            
-            System.out.println("done");
-        } else if (tokens.get(0).equals("nearest")) {
-        	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
-            List<Node> list = tree.findNearest(1, n);
-            for (int i = 0; i < list.size(); i++) {
-              System.out.println(list.get(i).getId());
-            }
-        } else if (tokens.get(0).equals("ways")) {
-          db.findBoundedWay(tokens.subList(1, 5));
-        } else if (tokens.get(0).equals("route")) {
-          db.routeCommand(tokens, tree);
-        } else if (tokens.get(0).equals("suggest")) {
-          db.genSuggestions(tokens.get(1));
-        } else {
-          System.out.println("ERROR: wrong command");
-        }
+        map.mapCommand(tokens);
       }
     } catch (IOException e) {
       System.out.println("ERROR: No command to read");
@@ -190,9 +147,7 @@ public final class Main {
       Map<String, Object> variables = null;
       try {
         Node n = new Node("testpt", qm.value("lat"), qm.value("lon"));
-        System.out.println(n.toString());
         List<Node> list = tree.findNearest(1, n);
-        System.out.println(list);
         variables = ImmutableMap.of("point", list.get(0));
       } catch (Exception e) {
           System.out.println(e);
@@ -209,7 +164,6 @@ public final class Main {
       List<List<String>> ways = new ArrayList<>();
       try {
         ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")), tree);
-        System.out.println(ways);
         variables = ImmutableMap.of("ways", ways);
       } catch (Exception e) {
           System.out.println(e);

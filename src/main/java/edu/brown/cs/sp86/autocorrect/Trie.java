@@ -100,6 +100,9 @@ public class Trie {
     }
     if (lastChar == null) {
       lastChar = temp;
+      if (lastChar == root) {
+        return new ArrayList<String>();
+      }
     }
     return findWordHelper(candidates, lastChar);
   }

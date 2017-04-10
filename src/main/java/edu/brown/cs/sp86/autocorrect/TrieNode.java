@@ -88,7 +88,7 @@ public class TrieNode {
   }
   /**
    *
-   * @param c set child with given letter c.
+   * @param letter set child with given letter.
    */
   public void setChild(char letter) {
     int index;

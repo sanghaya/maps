@@ -1,0 +1,7 @@
+INPUT
+map data/maps/smallMaps.sqlite3
+suggest 
+OUTPUT
+map set to data/maps/smallMaps.sqlite3
+ERROR:
+END
