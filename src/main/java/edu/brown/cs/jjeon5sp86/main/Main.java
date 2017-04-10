@@ -96,21 +96,7 @@ public final class Main {
         List<String> tokens = null;
         tokens = inputProcessor(line);
         if (tokens.get(0).equals("map")) {
-        	db.setupDB(tokens.get(1));
-            Set<String> traversable = db.queryWays();
-            List<Node> nodes = new ArrayList<Node>();
-            for(String n:traversable) {
-            	List<String> coordinates = db.queryLatLon(n);
-            	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
-            	nodes.add(node);
-            }
-            Node[] nodesArray = nodes.toArray(new Node[0]);
-            tree = new KDTree<Node>(nodesArray);
-            //populate Trie
-            Set<String> names = db.queryNames();
-            db.buildTrie(names);
-            
-            System.out.println("done");
+        	setUpMap(tokens);
         } else if (tokens.get(0).equals("nearest")) {
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
             List<Node> list = tree.findNearest(1, n);
@@ -131,6 +117,25 @@ public final class Main {
       System.out.println("ERROR: No command to read");
     }
   }
+  
+  private static void setUpMap(List<String> tokens) throws SQLException {
+	  db.setupDB(tokens.get(1));
+      Set<String> traversable = db.queryWays();
+      List<Node> nodes = new ArrayList<Node>();
+      for(String n:traversable) {
+      	List<String> coordinates = db.queryLatLon(n);
+      	Node node = new Node(n, coordinates.get(0), coordinates.get(1));
+      	nodes.add(node);
+      }
+      Node[] nodesArray = nodes.toArray(new Node[0]);
+      tree = new KDTree<Node>(nodesArray);
+      //populate Trie
+      Set<String> names = db.queryNames();
+      db.buildTrie(names);
+      
+      System.out.println("done");
+  }
+  
   private static FreeMarkerEngine createEngine() {
     Configuration config = new Configuration();
     File templates = new File("src/main/resources/spark/template/freemarker");
@@ -151,7 +156,7 @@ public final class Main {
 
     FreeMarkerEngine freeMarker = createEngine();
     Spark.get("/maps", new FrontHandler(), freeMarker);
-    Spark.post("/getInitial", new ResultsHandler());
+    Spark.post("/getWaysInBox", new ResultsHandler());
     Spark.post("/getNearest", new NearHandler());
     Spark.post("/getPathFromNode", new PathHandler());
     Spark.post("/suggestion", new SuggestHandler());
@@ -160,9 +165,15 @@ public final class Main {
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
-      Map<String, Object> variables = ImmutableMap.of("title",
+    	String[] parts = { "map", "data/maps/maps.sqlite3" };
+    	try {
+    		setUpMap(Arrays.asList(parts));
+    	} catch (Exception e) {
+    		System.out.println(e);
+    	}
+    	Map<String, Object> variables = ImmutableMap.of("title",
               "Maps");
-      return new ModelAndView(variables, "draw.ftl");
+    	return new ModelAndView(variables, "draw.ftl");
     }
   }
   

@@ -12,9 +12,13 @@ let topleft;
 let botright;
 let scalex;
 let scaley;
-let twopoints = [];
 
 let center = [41.826891, -71.402993];
+
+let paths = [];
+let startingTemp;
+let endTemp;
+let gettingPathFromStreet = false;
 
 $(document).ready(() => {
     // Setting up the canvas.
@@ -30,16 +34,10 @@ $(document).ready(() => {
     topleft = [41.828163, -71.404871];
     botright = [41.825541, -71.400365];
 
-    // $.post("/getInitial", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
-    //     const responseObject = JSON.parse(responseJSON);
-    //     map = responseObject.ways;
-    //     scale(1);
-    //     draw();
-    //     console.log("hihi")
-    // });
     scale(1);
     draw();
-    $('#map').click(pointOnClick);
+
+    $('#map').mouseup(pointOnClick);
     $('form').submit(getPathFromSt)
     $("textarea").on('keyup', printSuggestions)    
 });
@@ -49,10 +47,13 @@ $('html, body').css({
     height: '100%'
 });
 
+let dragFlag = 0;
 let myPageX;
 let myPageY;
 $( "#map" ).mousemove(function( e ) {
-    if(e.buttons == 1) {
+    if(e.buttons == 1 && Math.abs(e.pageX - myPageX) > 1 && Math.abs(e.pageY - myPageY) > 1) {
+        dragFlag = 1;
+
         topleft[1] = topleft[1] - descaleX(e.pageX - myPageX)
         botright[1] = botright[1] - descaleX(e.pageX - myPageX)
 
@@ -67,6 +68,7 @@ $( "#map" ).mousemove(function( e ) {
 });
 
 $( "#map" ).mousedown(function( e ) {
+    dragFlag = 0;
     myPageX = e.pageX
     myPageY = e.pageY
 });
@@ -74,6 +76,17 @@ $( "#map" ).mousedown(function( e ) {
 $('#map').bind('mousewheel', function (e) {
     scale(1 - e.originalEvent.wheelDelta / 120 / 50);
     draw()
+});
+
+$('#clearPath').click(function (e) {
+    if((startingTemp && endTemp) || gettingPathFromStreet) {
+        alert("Still Navigating!")
+    } else {
+        startingTemp = undefined;
+        endTemp = undefined;
+        paths = [];
+        draw();
+    }
 });
 
 function toPixelx(node) {
@@ -132,13 +145,15 @@ function draw() {
     ctx.strokeStyle = 'black'
     ctx.lineWidth = 1;
     ctx.stroke();
+
+    highlightPaths();
 }
 
 function getWays(x, y) {
     const key = x+","+y;
     if(map[key] != "loading") {
         map[key] = "loading";
-        $.post("/getInitial", {"a": center[0] + 0.01 * (y + 1), "b": center[1] + 0.01 * x, 
+        $.post("/getWaysInBox", {"a": center[0] + 0.01 * (y + 1), "b": center[1] + 0.01 * x, 
             "c": center[0] + 0.01 * y, "d": center[1] + 0.01 * (x + 1)}, responseJSON => {
                 const responseObject = JSON.parse(responseJSON);
                 map[key] = responseObject.ways;
@@ -148,10 +163,31 @@ function getWays(x, y) {
     }
 }
 
-function highlight() {
+function highlightPaths() {
+    if(startingTemp) {
+        ctx.fillStyle = "Red";
+        ctx.fillRect(toPixelx(startingTemp), toPixely(startingTemp), 5, 5);
+    }    
+
+    if(endTemp) {
+        ctx.fillStyle = "#09F";
+        ctx.fillRect(toPixelx(endTemp), toPixely(endTemp), 5, 5);
+    } 
+
+    if ((startingTemp && endTemp) || gettingPathFromStreet) {
+        ctx.font = "20px Verdana";
+        // Create gradient
+        var gradient = ctx.createLinearGradient(350, 0, 480, 0);
+        gradient.addColorStop("0", "magenta");
+        gradient.addColorStop("0.5", "blue");
+        gradient.addColorStop("1.0", "red");
+        // Fill with gradient
+        ctx.fillStyle = gradient;
+        ctx.fillText("Navigating...", 350, 480);
+    }
 
     ctx.beginPath();
-    for (let path of shortest) {
+    for (let path of paths) {
         const st = [parseFloat(path[0]), parseFloat(path[1])];
         const en = [parseFloat(path[2]), parseFloat(path[3])];
         ctx.moveTo(toPixelx(st), toPixely(st));
@@ -164,25 +200,26 @@ function highlight() {
 }
 
 function getPathFromSt() {
-    
+
     let str1 = $("#st1").val();
     let str2 = $("#st2").val();
     let str3 = $("#st3").val();
     let str4 = $("#st4").val();
 
+    gettingPathFromStreet = true;
     $.post("/getPathFromNode", {"a": str1, "b": str2, "c": str3, "d": str4}, responseJSON => {
         const responseObject = JSON.parse(responseJSON);
-        shortest = responseObject.ways;
-        console.log(shortest)
-        if (shortest.length === 0) {
+        gettingPathFromStreet = false;
+        if (responseObject.ways.length === 0) {
             alert("Path doesn't exist!");
+        } else {
+            paths = paths.concat(responseObject.ways);
+            draw();
         }
-        highlight();
     })
-
+    draw();
 }
 
- 
 function printSuggestions(event) {
     let word = event.target.value;
     $("#candi").empty();
@@ -201,39 +238,37 @@ function printSuggestions(event) {
 }   
 
 const pointOnClick = event => {
+    if (dragFlag === 0) {
+        // Get the x, y coordinates of the click event
+        // with (0, 0) being the top left corner of canvas.
+        const x = event.pageX 
+        const y = event.pageY
 
-    // Get the x, y coordinates of the click event
-    // with (0, 0) being the top left corner of canvas.
-    const x = event.pageX 
-    const y = event.pageY
+        const realX = topleft[1] + descaleX(x)
+        const realY = topleft[0] - descaleY(y)
 
-    const realX = topleft[1] + descaleX(x)
-    const realY = topleft[0] - descaleY(y)
-
-    $.post("/getNearest", {"lat": realY, "lon": realX}, responseJSON => {
-        const responseObject = JSON.parse(responseJSON);
-        coord = responseObject.point;
-        const point = [parseFloat(coord["lat"]), parseFloat(coord["lon"])];
-        if (point !== null) {
-            twopoints.push(point)
-        }
-        ctx.fillStyle = "Red";
-        ctx.fillRect(toPixelx(point), toPixely(point), 5, 5);
-
-        if (twopoints.length === 2) {
-            $.post("/getPathFromNode", {"a": twopoints[0][0], "b": twopoints[0][1], "c": twopoints[1][0], "d": twopoints[1][1]}, responseJSON => {
-                const responseObject = JSON.parse(responseJSON);
-                shortest = responseObject.ways;
-                if (shortest.length === 0) {
-                    alert("Path doesn't exist!");
-                }
-                highlight();
-            })
-            //time sleep not working
-            //setTimeout(clear(twopoints), 5000);
-            twopoints = [];
-        }
-    });
-
+        $.post("/getNearest", {"lat": realY, "lon": realX}, responseJSON => {
+            const responseObject = JSON.parse(responseJSON);
+            coord = responseObject.point;
+            const point = [parseFloat(coord["lat"]), parseFloat(coord["lon"])];
+            if (!startingTemp) {
+                startingTemp = point;
+            } else if (!endTemp) {
+                endTemp = point;
+                $.post("/getPathFromNode", {"a": startingTemp[0], "b": startingTemp[1], "c": point[0], "d": point[1]}, responseJSON => {
+                    const responseObject = JSON.parse(responseJSON);
+                    if (responseObject.ways.length === 0) {
+                        alert("Path doesn't exist!");
+                    } else {
+                        paths = paths.concat(responseObject.ways);
+                    }
+                    startingTemp = undefined;
+                    endTemp = undefined;
+                    draw();
+                });  
+            }
+            draw();
+        });
+    }
 };
 
