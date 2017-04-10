@@ -88,6 +88,7 @@ public final class Main {
       System.out.println("ERROR: No command to read");
     }
   }
+  
   private static FreeMarkerEngine createEngine() {
     Configuration config = new Configuration();
     File templates = new File("src/main/resources/spark/template/freemarker");
@@ -108,7 +109,7 @@ public final class Main {
 
     FreeMarkerEngine freeMarker = createEngine();
     Spark.get("/maps", new FrontHandler(), freeMarker);
-    Spark.post("/getInitial", new ResultsHandler());
+    Spark.post("/getWaysInBox", new ResultsHandler());
     Spark.post("/getNearest", new NearHandler());
     Spark.post("/getPathFromNode", new PathHandler());
     Spark.post("/suggestion", new SuggestHandler());
@@ -117,9 +118,15 @@ public final class Main {
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
-      Map<String, Object> variables = ImmutableMap.of("title",
+    	String[] parts = { "map", "data/maps/maps.sqlite3" };
+    	try {
+    	  map.mapCommand(Arrays.asList(parts));
+    	} catch (Exception e) {
+    		System.out.println(e);
+    	}
+    	Map<String, Object> variables = ImmutableMap.of("title",
               "Maps");
-      return new ModelAndView(variables, "draw.ftl");
+    	return new ModelAndView(variables, "draw.ftl");
     }
   }
   

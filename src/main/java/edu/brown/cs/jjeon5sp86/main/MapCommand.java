@@ -21,7 +21,6 @@ public class MapCommand {
   public void mapCommand(List<String> tokens) throws SQLException {
     if (tokens.size() >= 2) {
        if (tokens.get(0).equals("map")) {
-          boolean isLoading = false;
           db.setupDB(tokens.get(1));
           Set<String> traversable = db.queryWays();
           List<Node> nodes = new ArrayList<Node>();
@@ -35,8 +34,6 @@ public class MapCommand {
           //populate Trie
           Set<String> names = db.queryNames();
           db.buildTrie(names);
-          //System.out.println("done");
-          isLoading = true;
       } else if (tokens.get(0).equals("nearest")) {
           Node n = new Node("testpt", tokens.get(1), tokens.get(2));
           List<Node> list = tree.findNearest(1, n);
