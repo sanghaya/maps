@@ -41,7 +41,7 @@ import edu.brown.cs.sp86.autocorrect.MergeAndSuggest;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 import edu.brown.cs.jjeon5.stars.Star;
-import edu.brown.cs.sp86.autocorrect.ACCommand;
+import edu.brown.cs.sp86.autocorrect.Trie;
 
 /**
  * The Main class of our project. This is where execution begins.
@@ -91,6 +91,7 @@ public final class Main {
             new InputStreamReader(System.in));
     try {
     	//KDTree<Node> tree = null;
+        Trie trie = null;
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
@@ -105,6 +106,10 @@ public final class Main {
             }
             Node[] nodesArray = nodes.toArray(new Node[0]);
             tree = new KDTree<Node>(nodesArray);
+            //populate Trie
+            Set<String> names = db.queryNames();
+            db.buildTrie(names);
+            
             System.out.println("done");
         } else if (tokens.get(0).equals("nearest")) {
         	Node n = new Node("testpt", tokens.get(1), tokens.get(2));
@@ -149,6 +154,7 @@ public final class Main {
     Spark.post("/getInitial", new ResultsHandler());
     Spark.post("/getNearest", new NearHandler());
     Spark.post("/getPathFromNode", new PathHandler());
+    Spark.post("/suggestion", new SuggestHandler());
   }
   
   private static class FrontHandler implements TemplateViewRoute {
@@ -205,6 +211,22 @@ public final class Main {
         ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")), tree);
         System.out.println(ways);
         variables = ImmutableMap.of("ways", ways);
+      } catch (Exception e) {
+          System.out.println(e);
+      }
+      return GSON.toJson(variables);
+    }
+  }
+  
+  private static class SuggestHandler implements Route {
+    @Override
+    public String handle(Request req, Response res) {
+      QueryParamsMap qm = req.queryMap();
+      Map<String, Object> variables = null;
+      List<String> suggest;
+      try {
+        suggest = db.genSuggestions(qm.value("text"));
+        variables = ImmutableMap.of("options", suggest);
       } catch (Exception e) {
           System.out.println(e);
       }

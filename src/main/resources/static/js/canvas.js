@@ -41,6 +41,7 @@ $(document).ready(() => {
     draw();
     $('#map').click(pointOnClick);
     $('form').submit(getPathFromSt)
+    $("textarea").on('keyup', printSuggestions)    
 });
 
 $('html, body').css({
@@ -110,12 +111,10 @@ function draw() {
 
     let botx = Math.floor((botright[1] - center[1]) / 0.01);
     let boty = Math.floor((botright[0] - center[0]) / 0.01);
-    // console.log(topx+", "+topy + "    " + botx+", "+boty)
 
     ctx.beginPath()
     for(let x = topx; x <= botx; x++) {
         for(let y = topy; y >= boty; y--) {
-            //console.log("("+r+", "+c+")");
             const key = x+","+y;
             if(map[key] && map[key] != "loading") {
                 for (let way of map[key]) {
@@ -131,6 +130,7 @@ function draw() {
         }
     }
     ctx.strokeStyle = 'black'
+    ctx.lineWidth = 1;
     ctx.stroke();
 }
 
@@ -159,6 +159,7 @@ function highlight() {
         
     }
     ctx.strokeStyle = 'red'
+    ctx.lineWidth = 5;
     ctx.stroke();
 }
 
@@ -169,10 +170,8 @@ function getPathFromSt() {
     let str3 = $("#st3").val();
     let str4 = $("#st4").val();
 
-    console.log("hi1")
     $.post("/getPathFromNode", {"a": str1, "b": str2, "c": str3, "d": str4}, responseJSON => {
         const responseObject = JSON.parse(responseJSON);
-        console.log("hi2")
         shortest = responseObject.ways;
         console.log(shortest)
         if (shortest.length === 0) {
@@ -182,6 +181,24 @@ function getPathFromSt() {
     })
 
 }
+
+ 
+function printSuggestions(event) {
+    let word = event.target.value;
+    $("#candi").empty();
+    $.post("/suggestion", {text: word}, responseJSON => {
+        const responseObject = JSON.parse(responseJSON);
+
+        for (let i = 0; i < responseObject.options.length; i++) {
+            let html = "<p>"+ responseObject.options[i] + "</p>";
+            $("#candi").append(html);
+        }
+
+        if (word.length == 0) {
+            $("#candi").empty();
+        }
+    });
+}   
 
 const pointOnClick = event => {
 

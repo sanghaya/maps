@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 public class MapManager {
   private Connection conn = null;
+  private Trie trie = new Trie();
   
   public void setupDB(String filePath) {
     try {
@@ -56,7 +57,6 @@ public class MapManager {
 	  DNode start = null;
 	  DNode end = null;
 	  if (mode == 0) {
-	      System.out.println("is it2?");
 		  Node n1 = new Node("testpt", tokens.get(1), tokens.get(2));
 		  Node n2 = new Node("testpt2", tokens.get(3), tokens.get(4));
           List<Node> list = tree.findNearest(1, n1);
@@ -69,28 +69,16 @@ public class MapManager {
         			  Double.parseDouble(tokens.get(4)), "", null, 0);
 	  } else {
 		  try {
-		      //System.out.println(tokens.get(1));
-		      //System.out.println(tokens.get(2));
-		      //System.out.println(tokens.get(3));
-		      //System.out.println(tokens.get(4));
 			  String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
-			  String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);
-			  //getIntersection(tokens.get(1), tokens.get(2));
-              //getIntersection(tokens.get(3), tokens.get(4));
-			  System.out.println("what the fuck?");
-			  System.out.println(id1);
-			  System.out.println(id2);
-			  
+			  String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);			  
 			  List<String> latlon1 = queryLatLon(id1);
 			  List<String> latlon2 = queryLatLon(id2);
-			  
 			  start = new DNode(id1, Double.parseDouble(latlon1.get(0)), 
         			  Double.parseDouble(latlon1.get(1)), "", null, 0);
 			  end = new DNode(id2, Double.parseDouble(latlon2.get(0)), 
         			  Double.parseDouble(latlon2.get(1)), "", null, 0);
 			  
 		  } catch (Exception e) {
-			  //System.out.println(e);
 		  }
 	  }
 	  try {
@@ -121,17 +109,24 @@ public class MapManager {
 	        System.out.println(output.get(i));
 	      }
 	  } catch (Exception e) {
-		  //System.out.println(e);
 	  }
 	  return ways;
   }
   
   public List<String> getIntersection(String name1, String name2) throws SQLException {
     List<String> intersec = new ArrayList<String>();
+    String name1alt = "";
+    String name2alt = "";
     Set<String> firstNodes = queryStartEnd(name1);
+    if (name1.contains((" St"))) {
+      name1alt = name1.replace(" St", " Street");
+      firstNodes.addAll(queryStartEnd(name1alt));
+    }
     Set<String> secondNodes = queryStartEnd(name2);
-    System.out.println("firstNode: "+ firstNodes);
-    System.out.println("secnode: "+ secondNodes);
+    if (name2.contains((" St"))) {
+      name2alt = name2.replace(" St", " Street");
+      secondNodes.addAll(queryStartEnd(name2alt));
+    }
     Iterator<String> itr = firstNodes.iterator();
     while (itr.hasNext()) {
       String id = itr.next();
@@ -139,7 +134,6 @@ public class MapManager {
         intersec.add(id);
       }
     }
-    System.out.println("Intersection: "+intersec );
     return intersec;
   }
 
@@ -299,16 +293,13 @@ public class MapManager {
   }
   
   public List<String> genSuggestions(String inpt) throws SQLException {
-    Trie trie = new Trie();
-    Set<String> names = new HashSet<>();
     List<String> candidates = new ArrayList<String>();
-    names = queryNames();
-    System.out.println(names);
-    //trie.insertWord(trie.getRoot(), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ");
-    trie = buildTrie(names);
     candidates = trie.findWord(inpt);
-    for (String word: candidates) {
-      System.out.println(word);
+    for (int i = 0; i < candidates.size(); i++) {
+     System.out.println(candidates.get(i));
+     if (i > 3) {
+       return candidates.subList(0, 3);
+     }
     }
     return candidates;
   }
@@ -369,7 +360,6 @@ public class MapManager {
   }
   
   public Trie buildTrie(Set<String> names) {
-    Trie trie = new Trie();
     for (String name: names) {
       trie.insertWord(trie.getRoot(), name);
     }
