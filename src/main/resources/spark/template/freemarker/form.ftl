@@ -1,4 +1,4 @@
-<form method="POST" action="/intersection">
+<form onsubmit="return false">
   <span> Enter street names to find intersections and submit search!</span>
   <textarea name="text" id="st1" placeholder="Enter Street Name 1"></textarea><br>
   <textarea name="text" id="st2" placeholder="Enter Street Name 2"></textarea><br>

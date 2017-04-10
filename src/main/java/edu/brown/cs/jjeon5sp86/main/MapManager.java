@@ -56,6 +56,7 @@ public class MapManager {
 	  DNode start = null;
 	  DNode end = null;
 	  if (mode == 0) {
+	      System.out.println("is it2?");
 		  Node n1 = new Node("testpt", tokens.get(1), tokens.get(2));
 		  Node n2 = new Node("testpt2", tokens.get(3), tokens.get(4));
           List<Node> list = tree.findNearest(1, n1);
@@ -68,8 +69,17 @@ public class MapManager {
         			  Double.parseDouble(tokens.get(4)), "", null, 0);
 	  } else {
 		  try {
+		      //System.out.println(tokens.get(1));
+		      //System.out.println(tokens.get(2));
+		      //System.out.println(tokens.get(3));
+		      //System.out.println(tokens.get(4));
 			  String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
 			  String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);
+			  //getIntersection(tokens.get(1), tokens.get(2));
+              //getIntersection(tokens.get(3), tokens.get(4));
+			  System.out.println("what the fuck?");
+			  System.out.println(id1);
+			  System.out.println(id2);
 			  
 			  List<String> latlon1 = queryLatLon(id1);
 			  List<String> latlon2 = queryLatLon(id2);
@@ -80,7 +90,7 @@ public class MapManager {
         			  Double.parseDouble(latlon2.get(1)), "", null, 0);
 			  
 		  } catch (Exception e) {
-			  System.out.println(e);
+			  //System.out.println(e);
 		  }
 	  }
 	  try {
@@ -116,10 +126,12 @@ public class MapManager {
 	  return ways;
   }
   
-  public List<String> getIntersection(String id1, String id2) throws SQLException {
+  public List<String> getIntersection(String name1, String name2) throws SQLException {
     List<String> intersec = new ArrayList<String>();
-    Set<String> firstNodes = queryStartEnd(id1);
-    Set<String> secondNodes = queryStartEnd(id2);
+    Set<String> firstNodes = queryStartEnd(name1);
+    Set<String> secondNodes = queryStartEnd(name2);
+    System.out.println("firstNode: "+ firstNodes);
+    System.out.println("secnode: "+ secondNodes);
     Iterator<String> itr = firstNodes.iterator();
     while (itr.hasNext()) {
       String id = itr.next();
@@ -127,6 +139,7 @@ public class MapManager {
         intersec.add(id);
       }
     }
+    System.out.println("Intersection: "+intersec );
     return intersec;
   }
 

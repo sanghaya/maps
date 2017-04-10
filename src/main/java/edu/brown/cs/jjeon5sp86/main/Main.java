@@ -203,6 +203,7 @@ public final class Main {
       List<List<String>> ways = new ArrayList<>();
       try {
         ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")), tree);
+        System.out.println(ways);
         variables = ImmutableMap.of("ways", ways);
       } catch (Exception e) {
           System.out.println(e);
