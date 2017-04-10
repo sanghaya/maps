@@ -7,15 +7,16 @@ let canvas;
 // Global reference to the canvas' context.
 let ctx;
 
-let map;
+let map = {};
 let topleft;
 let botright;
 let scalex;
 let scaley;
 let twopoints = [];
 
-$(document).ready(() => {
+let center = [41.826891, -71.402993];
 
+$(document).ready(() => {
     // Setting up the canvas.
     canvas = $('#map')[0];
     canvas.width = MAP_SIZE
@@ -29,17 +30,49 @@ $(document).ready(() => {
     topleft = [41.828163, -71.404871];
     botright = [41.825541, -71.400365];
 
-    $.post("/getInitial", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
-            const responseObject = JSON.parse(responseJSON);
-            map = responseObject.ways;
-            scale(1);
-            draw();
-            console.log("hihi")
-    });
-
+    // $.post("/getInitial", {"a": topleft[0], "b": topleft[1], "c": botright[0], "d": botright[1]}, responseJSON => {
+    //     const responseObject = JSON.parse(responseJSON);
+    //     map = responseObject.ways;
+    //     scale(1);
+    //     draw();
+    //     console.log("hihi")
+    // });
+    scale(1);
+    draw();
     $('#map').click(pointOnClick);
 });
 
+$('html, body').css({
+    overflow: 'hidden',
+    height: '100%'
+});
+
+let myPageX;
+let myPageY;
+$( "#map" ).mousemove(function( e ) {
+    if(e.buttons == 1) {
+        topleft[1] = topleft[1] - descaleX(e.pageX - myPageX)
+        botright[1] = botright[1] - descaleX(e.pageX - myPageX)
+
+        topleft[0] = topleft[0] + descaleY(e.pageY - myPageY)
+        botright[0] = botright[0] + descaleY(e.pageY - myPageY)
+
+        myPageX = e.pageX
+        myPageY = e.pageY
+
+        draw()
+    }
+});
+
+$( "#map" ).mousedown(function( e ) {
+    myPageX = e.pageX
+    myPageY = e.pageY
+});
+
+$('#map').bind('mousewheel', function (e) {
+    scale(1 - e.originalEvent.wheelDelta / 120 / 50);
+    draw()
+});
 
 function toPixelx(node) {
     return (node[1] - topleft[1]) * scalex;
@@ -68,21 +101,50 @@ function descaleY(y) {
 	return y * 1/scaley;
 }
 
-
 function draw() {
+    ctx.clearRect(0, 0, 500, 500);
 
-    for (let way of map) {
-        //console.log(way)
-        const start = [parseFloat(way[1]), parseFloat(way[2])];
-        const end = [parseFloat(way[3]), parseFloat(way[4])];
+    let topx = Math.floor((topleft[1] - center[1]) / 0.01);
+    let topy = Math.floor((topleft[0] - center[0]) / 0.01);
 
-        ctx.moveTo(toPixelx(start), toPixely(start));
-        ctx.lineTo(toPixelx(end), toPixely(end));
-        
+    let botx = Math.floor((botright[1] - center[1]) / 0.01);
+    let boty = Math.floor((botright[0] - center[0]) / 0.01);
+    // console.log(topx+", "+topy + "    " + botx+", "+boty)
+
+    ctx.beginPath()
+    for(let x = topx; x <= botx; x++) {
+        for(let y = topy; y >= boty; y--) {
+            //console.log("("+r+", "+c+")");
+            const key = x+","+y;
+            if(map[key] && map[key] != "loading") {
+                for (let way of map[key]) {
+                    const start = [parseFloat(way[1]), parseFloat(way[2])];
+                    const end = [parseFloat(way[3]), parseFloat(way[4])];
+
+                    ctx.moveTo(toPixelx(start), toPixely(start));
+                    ctx.lineTo(toPixelx(end), toPixely(end));
+                }
+            } else {
+                getWays(x, y);
+            }
+        }
     }
     ctx.strokeStyle = 'black'
     ctx.stroke();
-    
+}
+
+function getWays(x, y) {
+    const key = x+","+y;
+    if(map[key] != "loading") {
+        map[key] = "loading";
+        $.post("/getInitial", {"a": center[0] + 0.01 * (y + 1), "b": center[1] + 0.01 * x, 
+            "c": center[0] + 0.01 * y, "d": center[1] + 0.01 * (x + 1)}, responseJSON => {
+            const responseObject = JSON.parse(responseJSON);
+            map[key] = responseObject.ways;
+            console.log("loaded:" + "("+x+", "+y+")" + key);
+            draw();
+        });
+    }
 }
 
 function highlight() {
@@ -104,7 +166,7 @@ function highlight() {
 function clear() {
     for (let node of twopoints)
         console.log(node)
-        ctx.clearRect(toPixelx(node), toPixely(node), 5, 5);
+    ctx.clearRect(toPixelx(node), toPixely(node), 5, 5);
 }
 /*
 
@@ -160,17 +222,17 @@ const paintBoard = () => {
 	This function does two things if the click was valid:
 	- Paints the clicked square on the board
 	- Draws a path from the previous click to the current click
-*/
+    */
 
-const pointOnClick = event => {
+    const pointOnClick = event => {
 
 	// Get the x, y coordinates of the click event
 	// with (0, 0) being the top left corner of canvas.
     const x = event.pageX 
     const y = event.pageY
 
-	const realX = topleft[1] + descaleX(x)
-	const realY = topleft[0] - descaleY(y)
+    const realX = topleft[1] + descaleX(x)
+    const realY = topleft[0] - descaleY(y)
 
     $.post("/getNearest", {"lat": realY, "lon": realX}, responseJSON => {
         const responseObject = JSON.parse(responseJSON);
