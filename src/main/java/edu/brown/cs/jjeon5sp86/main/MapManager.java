@@ -27,6 +27,43 @@ import java.util.Iterator;
 public class MapManager {
   private Connection conn = null;
   private Trie trie = new Trie();
+  private KDTree<Node> tree = null;
+ 
+  public void mapCommand(List<String> tokens) throws SQLException {
+    if (tokens.size() >= 2) {
+       if (tokens.get(0).equals("map")) {
+          setupDB(tokens.get(1));
+          Set<String> traversable = queryWays();
+          List<Node> nodes = new ArrayList<Node>();
+          for(String n:traversable) {
+              List<String> coordinates = queryLatLon(n);
+              Node node = new Node(n, coordinates.get(0), coordinates.get(1));
+              nodes.add(node);
+          }
+          Node[] nodesArray = nodes.toArray(new Node[0]);
+          tree = new KDTree<Node>(nodesArray);
+          //populate Trie
+          Set<String> names = queryNames();
+          buildTrie(names);
+      } else if (tokens.get(0).equals("nearest")) {
+          Node n = new Node("testpt", tokens.get(1), tokens.get(2));
+          List<Node> list = tree.findNearest(1, n);
+          for (int i = 0; i < list.size(); i++) {
+            System.out.println(list.get(i).getId());
+          }
+      } else if (tokens.get(0).equals("ways")) {
+        findBoundedWay(tokens.subList(1, 5));
+      } else if (tokens.get(0).equals("route")) {
+        routeCommand(tokens);
+      } else if (tokens.get(0).equals("suggest")) {
+        genSuggestions(tokens.get(1));
+      } else {
+        System.out.println("ERROR: wrong command");
+      }
+    } else {
+      System.out.println("ERROR: you need more input");
+    }
+  }
   
   public void setupDB(String filePath) {
     try {
@@ -45,7 +82,7 @@ public class MapManager {
     }
   }
   
-  public List<List<String>> routeCommand(List<String> tokens, KDTree<Node> tree) {
+  public List<List<String>> routeCommand(List<String> tokens) {
 	  List<List<String>> ways = new ArrayList<List<String>>();
 	  int mode = 0;
 	  try {
@@ -364,5 +401,9 @@ public class MapManager {
       trie.insertWord(trie.getRoot(), name);
     }
     return trie;
+  }
+  
+  public List<Node> findNearestHelper(int n, Node pt) {
+    return tree.findNearest(n, pt); 
   }
 }

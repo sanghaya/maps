@@ -55,13 +55,9 @@ public final class Main {
   }
   private String[] args;
   private static MapManager db;
-  private static KDTree<Node> tree;
-  private static MapCommand map;
 
   private Main(String[] args) {
     db = new MapManager();
-    tree = null;
-    map = new MapCommand(db, tree);
     this.args = args;   
   }
 
@@ -82,7 +78,7 @@ public final class Main {
       while ((line = cmds.readLine()) != null) {
         List<String> tokens = null;
         tokens = inputProcessor(line);
-        map.mapCommand(tokens);
+        db.mapCommand(tokens);
       }
     } catch (IOException e) {
       System.out.println("ERROR: No command to read");
@@ -120,7 +116,7 @@ public final class Main {
     public ModelAndView handle(Request req, Response res) {
     	String[] parts = { "map", "data/maps/maps.sqlite3" };
     	try {
-    	  map.mapCommand(Arrays.asList(parts));
+    	  db.mapCommand(Arrays.asList(parts));
     	} catch (Exception e) {
     		System.out.println(e);
     	}
@@ -154,7 +150,7 @@ public final class Main {
       Map<String, Object> variables = null;
       try {
         Node n = new Node("testpt", qm.value("lat"), qm.value("lon"));
-        List<Node> list = tree.findNearest(1, n);
+        List<Node> list = db.findNearestHelper(1, n);
         variables = ImmutableMap.of("point", list.get(0));
       } catch (Exception e) {
           System.out.println(e);
@@ -170,7 +166,7 @@ public final class Main {
       Map<String, Object> variables = null;
       List<List<String>> ways = new ArrayList<>();
       try {
-        ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")), tree);
+        ways = db.routeCommand(Arrays.asList("route", qm.value("a"), qm.value("b"), qm.value("c"), qm.value("d")));
         variables = ImmutableMap.of("ways", ways);
       } catch (Exception e) {
           System.out.println(e);
