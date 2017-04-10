@@ -139,11 +139,11 @@ function getWays(x, y) {
         map[key] = "loading";
         $.post("/getInitial", {"a": center[0] + 0.01 * (y + 1), "b": center[1] + 0.01 * x, 
             "c": center[0] + 0.01 * y, "d": center[1] + 0.01 * (x + 1)}, responseJSON => {
-            const responseObject = JSON.parse(responseJSON);
-            map[key] = responseObject.ways;
-            console.log("loaded:" + "("+x+", "+y+")" + key);
-            draw();
-        });
+                const responseObject = JSON.parse(responseJSON);
+                map[key] = responseObject.ways;
+                console.log("loaded:" + "("+x+", "+y+")" + key);
+                draw();
+            });
     }
 }
 
@@ -218,16 +218,16 @@ const paintBoard = () => {
 };
 
 
-	Called when the board is clicked.
-	This function does two things if the click was valid:
-	- Paints the clicked square on the board
-	- Draws a path from the previous click to the current click
-    */
+Called when the board is clicked.
+This function does two things if the click was valid:
+- Paints the clicked square on the board
+- Draws a path from the previous click to the current click
+*/
 
-    const pointOnClick = event => {
+const pointOnClick = event => {
 
-	// Get the x, y coordinates of the click event
-	// with (0, 0) being the top left corner of canvas.
+    // Get the x, y coordinates of the click event
+    // with (0, 0) being the top left corner of canvas.
     const x = event.pageX 
     const y = event.pageY
 
