@@ -2,25 +2,52 @@ package edu.brown.cs.jjeon5.stars;
 
 import java.util.Objects;
 
+/**
+ * Node class for KDTree.
+ * 
+ * @author sangha, jjeon
+ *
+ */
 public class Node implements KDable<Node> {
   private String id;
   private double lat;
   private double lon;
 
+  /**
+   *
+   * @param id
+   *          node id
+   * @param lat
+   *          node's latitude
+   * @param lon
+   *          node's longitude
+   */
   public Node(String id, String lat, String lon) {
     this.id = id;
     this.lat = Double.parseDouble(lat);
     this.lon = Double.parseDouble(lon);
   }
 
+  /**
+   *
+   * @return node's id
+   */
   public String getId() {
     return id;
   }
 
+  /**
+   *
+   * @return node's latitude
+   */
   public double getLat() {
     return lat;
   }
 
+  /**
+   *
+   * @return node's longitude
+   */
   public double getLon() {
     return lon;
   }
@@ -32,14 +59,14 @@ public class Node implements KDable<Node> {
     } else if (dim == 1) {
       return Double.compare(lon, b.getLon());
     } else {
-      // error??
       return -1;
     }
   }
 
   @Override
   public double distance(Node b) {
-    return Math.pow((lat - b.getLat()), 2) + Math.pow((lon - b.getLon()), 2);
+    return Math.sqrt(
+        Math.pow((lat - b.getLat()), 2) + Math.pow((lon - b.getLon()), 2));
   }
 
   /**
