@@ -13,7 +13,7 @@ import edu.brown.cs.jjeon5sp86.main.MapManager;
 
 /**
  * Dijkstra class.
- * 
+ *
  * @author sangha
  *
  */

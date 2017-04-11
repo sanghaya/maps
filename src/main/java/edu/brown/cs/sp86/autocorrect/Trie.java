@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Class for Trie.
- * 
+ *
  * @author sangha
  *
  */
@@ -95,7 +95,7 @@ public class Trie {
 
   /**
    * Helper for FindWord.
-   * 
+   *
    * @param candidates
    *          List of string of possible suggestions
    * @param lastChar

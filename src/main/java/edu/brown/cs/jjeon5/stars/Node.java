@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Node class for KDTree.
- * 
+ *
  * @author sangha, jjeon
  *
  */

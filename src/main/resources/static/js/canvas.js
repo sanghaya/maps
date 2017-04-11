@@ -222,12 +222,12 @@ function getWays(x, y) {
 function highlightPaths() {
     if(startingTemp) {
         ctx.fillStyle = "Red";
-        ctx.fillRect(toPixelx(startingTemp), toPixely(startingTemp), 10, 10);
+        ctx.fillRect(toPixelx(startingTemp), toPixely(startingTemp), 5, 5);
     }    
 
     if(endTemp) {
         ctx.fillStyle = "#09F";
-        ctx.fillRect(toPixelx(endTemp), toPixely(endTemp), 10, 10);
+        ctx.fillRect(toPixelx(endTemp), toPixely(endTemp), 5, 5);
     } 
 
     if ((startingTemp && endTemp) || gettingPathFromStreet) {

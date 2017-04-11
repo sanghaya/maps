@@ -2,7 +2,7 @@ package edu.brown.cs.sp86.autocorrect;
 
 /**
  * Class of Node of a Trie.
- * 
+ *
  * @author sangha
  *
  */

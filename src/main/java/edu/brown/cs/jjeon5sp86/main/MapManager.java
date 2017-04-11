@@ -31,16 +31,24 @@ public class MapManager {
   private Connection conn = null;
   private Trie trie = new Trie();
   private KDTree<Node> tree = null;
-  private ConcurrentMap<String, String> traffic = new ConcurrentHashMap<String, String>();
+  private ConcurrentMap<String, String> traffic;
+  private static final int ONESECOND = 1000;
+  private static final int LONGTIME = 10000;
+  private boolean threadStop = false;
 
   public MapManager() {
-    TrafficUpdate R1 = new TrafficUpdate("Thread-1");
-    R1.start();
+    traffic = new ConcurrentHashMap<String, String>();
+    TrafficUpdate t = new TrafficUpdate("Thread-1");
+    t.start();
   }
 
   public Map<String, String> getTraffic() {
     Map<String, String> toReturn = new HashMap<String, String>(traffic);
     return toReturn;
+  }
+
+  public void closeThread() {
+    threadStop = true;
   }
 
   class TrafficUpdate implements Runnable {
@@ -49,28 +57,25 @@ public class MapManager {
 
     TrafficUpdate(String name) {
       threadName = name;
-      System.out.println("Creating " + threadName);
     }
 
     public void run() {
-      System.out.println("Running " + threadName);
       try {
         long timeStamp = 0;
-        for (int i = 10000; i > 0; i--) {
-          // System.out.println("Thread: " + threadName + ", " + i);
-          getHTML("http://localhost:8080/?last=" + timeStamp);
-          timeStamp = Instant.now().getEpochSecond();
-          Thread.sleep(1000);
+        for (int i = LONGTIME; i > 0; i--) {
+          if (!threadStop) {
+            getHTML("http://localhost:8080/?last=" + timeStamp);
+            timeStamp = Instant.now().getEpochSecond();
+            Thread.sleep(ONESECOND);
+          }
         }
       } catch (Exception e) {
         System.out.println(e);
       }
 
-      System.out.println("Thread " + threadName + " exiting.");
     }
 
     public void start() {
-      System.out.println("Starting " + threadName);
       if (t == null) {
         t = new Thread(this, threadName);
         t.start();
@@ -78,7 +83,6 @@ public class MapManager {
     }
 
     public void getHTML(String urlToRead) throws Exception {
-      System.out.println(urlToRead);
       StringBuilder result = new StringBuilder();
       URL url = new URL(urlToRead);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -96,7 +100,6 @@ public class MapManager {
       String[] array = data.split(",");
       if (array.length >= 2) {
         for (int i = 0; i < array.length; i = i + 2) {
-          System.out.println(array[i] + "  ->  " + array[i + 1]);
           traffic.putIfAbsent(array[i], array[i + 1]);
         }
       }
@@ -345,8 +348,8 @@ public class MapManager {
     Set<String> nodeList = new HashSet<>();
     try {
       PreparedStatement prep;
-      prep = conn.prepareStatement(
-          "SELECT id FROM node WHERE latitude > ? AND latitude < ? AND longitude < ? And longitude > ?");
+      prep = conn.prepareStatement("SELECT id FROM node WHERE latitude > ? AND "
+          + "latitude < ? AND longitude < ? And longitude > ?");
       prep.setDouble(1, lat2);
       prep.setDouble(2, lat1);
       prep.setDouble(3, lon2);
