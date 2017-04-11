@@ -26,7 +26,11 @@ import edu.brown.cs.jjeon5.bacon.Dijkstra;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 import edu.brown.cs.sp86.autocorrect.Trie;
-
+/**
+ * MapManager class to manage commands and run queries.
+ * @author sangha
+ *
+ */
 public class MapManager {
   private Connection conn = null;
   private Trie trie = new Trie();
@@ -35,22 +39,34 @@ public class MapManager {
   private static final int ONESECOND = 1000;
   private static final int LONGTIME = 10000;
   private boolean threadStop = false;
-
+  /**
+   * MapManager constructor.
+   */
   public MapManager() {
     traffic = new ConcurrentHashMap<String, String>();
     TrafficUpdate t = new TrafficUpdate("Thread-1");
     t.start();
   }
-
+  /**
+   *
+   * @return Dictionary of traffic
+   */
   public Map<String, String> getTraffic() {
     Map<String, String> toReturn = new HashMap<String, String>(traffic);
     return toReturn;
   }
-
+  /**
+   * close thread.
+   */
   public void closeThread() {
     threadStop = true;
   }
 
+  /**
+   * Traffic update class.
+   * @author sangha
+   *
+   */
   class TrafficUpdate implements Runnable {
     private Thread t;
     private String threadName;
@@ -59,6 +75,9 @@ public class MapManager {
       threadName = name;
     }
 
+    /**
+     * Run class for threading.
+     */
     public void run() {
       try {
         long timeStamp = 0;
@@ -74,14 +93,20 @@ public class MapManager {
       }
 
     }
-
+    /**
+     * Start function to start multi-threading.
+     */
     public void start() {
       if (t == null) {
         t = new Thread(this, threadName);
         t.start();
       }
     }
-
+    /**
+     *
+     * @param urlToRead input URL
+     * @throws Exception when HTML not found
+     */
     public void getHTML(String urlToRead) throws Exception {
       StringBuilder result = new StringBuilder();
       URL url = new URL(urlToRead);
@@ -105,7 +130,11 @@ public class MapManager {
       }
     }
   }
-
+  /**
+   *
+   * @param tokens String input in REPL
+   * @throws SQLException thrown when query goes wrong
+   */
   public void mapCommand(List<String> tokens) throws SQLException {
     if (tokens.size() >= 2) {
       if (tokens.get(0).equals("map")) {
@@ -141,7 +170,10 @@ public class MapManager {
       System.out.println("ERROR: you need more input");
     }
   }
-
+  /**
+   *
+   * @param filePath path of the database
+   */
   public void setupDB(String filePath) {
     try {
       // this line loads the driver manager class, and must be
@@ -158,7 +190,11 @@ public class MapManager {
       System.out.println("ERROR: Cannot connect to database.");
     }
   }
-
+  /**
+   *
+   * @param tokens repl input
+   * @return list of list of strings of lats and lons
+   */
   public List<List<String>> routeCommand(List<String> tokens) {
     List<List<String>> ways = new ArrayList<List<String>>();
     int mode = 0;
@@ -226,7 +262,13 @@ public class MapManager {
     }
     return ways;
   }
-
+  /**
+   *
+   * @param name1 street name
+   * @param name2 street name
+   * @return ids of intersecting nodes
+   * @throws SQLException when SQL query is wrong
+   */
   public List<String> getIntersection(String name1, String name2)
       throws SQLException {
     List<String> intersec = new ArrayList<String>();
@@ -251,7 +293,12 @@ public class MapManager {
     }
     return intersec;
   }
-
+  /**
+   *
+   * @param n Dijkstra node
+   * @return neighbor nodes
+   * @throws SQLException when query is wrong
+   */
   public List<DNode> getNeighbors(DNode n) throws SQLException {
     List<DNode> neighbors = new ArrayList<DNode>();
 
@@ -281,7 +328,11 @@ public class MapManager {
 
     return neighbors;
   }
-
+  /**
+   *
+   * @return set of starting and ending node ids
+   * @throws SQLException thrown
+   */
   public Set<String> queryWays() throws SQLException {
     Set<String> nodeList = new HashSet<>();
     try {
@@ -302,7 +353,12 @@ public class MapManager {
     }
     return nodeList;
   }
-
+  /**
+   *
+   * @param name way's name
+   * @return start, end nodes
+   * @throws SQLException thrown
+   */
   public Set<String> queryStartEnd(String name) throws SQLException {
     Set<String> endList = new HashSet<>();
     try {
@@ -321,7 +377,12 @@ public class MapManager {
     }
     return endList;
   }
-
+  /**
+   *
+   * @param id way's id
+   * @return name, start, end nodes
+   * @throws SQLException thrown
+   */
   public List<String> queryFromId(String id) throws SQLException {
     List<String> nodes = new ArrayList<>();
     try {
@@ -342,7 +403,15 @@ public class MapManager {
     }
     return nodes;
   }
-
+  /**
+   * query for bounding box.
+   * @param lat1 latitude of topleft
+   * @param lon1 longitude of topleft
+   * @param lat2 latitude of bottom right
+   * @param lon2 latitude of bottom right
+   * @return nodes in between
+   * @throws SQLException thrown
+   */
   public Set<String> queryNodes(Double lat1, Double lon1, Double lat2,
       Double lon2) throws SQLException {
     Set<String> nodeList = new HashSet<>();
@@ -365,7 +434,12 @@ public class MapManager {
     }
     return nodeList;
   }
-
+  /**
+   *
+   * @param id node's id
+   * @return lat, lon
+   * @throws SQLException thrown
+   */
   public List<String> queryLatLon(String id) throws SQLException {
     List<String> coordinates = new ArrayList<>();
     try {
@@ -385,7 +459,12 @@ public class MapManager {
     }
     return coordinates;
   }
-
+  /**
+   *
+   * @param id node's id
+   * @return way's id
+   * @throws SQLException thrown
+   */
   public Set<String> queryWayFromNode(String id) throws SQLException {
     Set<String> wayIdList = new HashSet<>();
     try {
@@ -405,7 +484,12 @@ public class MapManager {
     }
     return wayIdList;
   }
-
+  /**
+   *
+   * @param inpt word to be corrected
+   * @return possible suggestions
+   * @throws SQLException thrown
+   */
   public List<String> genSuggestions(String inpt) throws SQLException {
     List<String> candidates = new ArrayList<String>();
     candidates = trie.findWord(inpt);
@@ -417,7 +501,11 @@ public class MapManager {
     }
     return candidates;
   }
-
+  /**
+   * query all way's names.
+   * @return set of names
+   * @throws SQLException thrown
+   */
   public Set<String> queryNames() throws SQLException {
     Set<String> names = new HashSet<>();
     try {
@@ -434,7 +522,12 @@ public class MapManager {
     }
     return names;
   }
-
+  /**
+   * find ways inside bounding box.
+   * @param tokens REPL input
+   * @return list of way ids
+   * @throws SQLException thrown
+   */
   public List<String> findBoundedWay(List<String> tokens) throws SQLException {
     Double lat1 = Double.valueOf(tokens.get(0));
     Double lat2 = Double.valueOf(tokens.get(2));
@@ -453,7 +546,12 @@ public class MapManager {
     }
     return boundedWayList;
   }
-
+  /**
+   *
+   * @param wayId way ids
+   * @return lats and lons of start/end
+   * @throws SQLException thrown
+   */
   public List<List<String>> guiData(List<String> wayId) throws SQLException {
     List<String> nodes = new ArrayList<>();
     List<List<String>> ways = new ArrayList<List<String>>();
@@ -472,14 +570,23 @@ public class MapManager {
     }
     return ways;
   }
-
+  /**
+   *
+   * @param names way's names
+   * @return trie
+   */
   public Trie buildTrie(Set<String> names) {
     for (String name : names) {
       trie.insertWord(trie.getRoot(), name);
     }
     return trie;
   }
-
+  /**
+   *
+   * @param n number of neighbor to search
+   * @param pt node in KDtree
+   * @return list of neighbors
+   */
   public List<Node> findNearestHelper(int n, Node pt) {
     return tree.findNearest(n, pt);
   }

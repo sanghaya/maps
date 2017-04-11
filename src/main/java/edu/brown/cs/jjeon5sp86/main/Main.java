@@ -113,7 +113,11 @@ public final class Main {
     Spark.post("/suggestion", new SuggestHandler());
     Spark.post("/getTraffic", new TrafficUpdateHandler());
   }
-
+  /**
+   * Front handler.
+   * @author sangha
+   *
+   */
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
@@ -131,7 +135,11 @@ public final class Main {
       return new ModelAndView(variables, "draw.ftl");
     }
   }
-
+  /**
+   * Handles starting and end points to draw.
+   * @author sangha
+   *
+   */
   private static class ResultsHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
@@ -149,7 +157,11 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
-
+  /**
+   * Finds nearest traversable node.
+   * @author sangha
+   *
+   */
   private static class NearHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
@@ -165,7 +177,11 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
-
+  /**
+   * Returns shortest path.
+   * @author sangha
+   *
+   */
   private static class PathHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
@@ -182,7 +198,11 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
-
+  /**
+   * Returns autocorrected suggestions.
+   * @author sangha
+   *
+   */
   private static class SuggestHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
@@ -198,7 +218,11 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
-
+  /**
+   * Handles traffic update.
+   * @author sangha
+   *
+   */
   private static class TrafficUpdateHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
@@ -206,7 +230,11 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
-
+  /**
+   * Handles exception.
+   * @author sangha
+   *
+   */
   private static class ExceptionPrinter implements ExceptionHandler {
     @Override
     public void handle(Exception e, Request req, Response res) {
@@ -220,7 +248,11 @@ public final class Main {
       res.body(stacktrace.toString());
     }
   }
-
+  /**
+   * tokenizes REPL input.
+   * @param line REPL input
+   * @return list of string
+   */
   private List<String> inputProcessor(String line) {
     List<String> list = new ArrayList<String>();
     Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(line);
