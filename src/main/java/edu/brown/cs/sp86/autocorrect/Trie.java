@@ -29,8 +29,6 @@ public class Trie {
    * @param parent root of the node.
    * @param s string to be inserted into the Trie
    */
-  
-  /*
   public void insertWord(TrieNode parent, String s) {
     if (s.isEmpty()) {
       return;
@@ -42,25 +40,7 @@ public class Trie {
     } else if (Character.isLowerCase(letter)) {
       index = letter - 'G';
     } else {
-      index = 52;
-    }
-    System.out.println(letter + ": " + index);
-    insertWord(parent, s.substring(1));
-  }
-  */
-
-  public void insertWord(TrieNode parent, String s) {
-    if (s.isEmpty()) {
-      return;
-    }
-    char letter = s.charAt(0);
-    int index;
-    if (Character.isUpperCase(letter)) {
-      index = letter - 'A';
-    } else if (Character.isLowerCase(letter)) {
-      index = letter - 'G';
-    } else {
-      index = 52;
+      index = '4';
     }
     parent.setLeaf(false);
     if (parent.getChild(index) == null) {
@@ -93,7 +73,7 @@ public class Trie {
       } else if (Character.isLowerCase(letter)) {
         index = letter - 'G';
       } else {
-        index = 52;
+        index = '4';
       }
       lastChar = lastChar.getChild(index);
       s = s.substring(1);

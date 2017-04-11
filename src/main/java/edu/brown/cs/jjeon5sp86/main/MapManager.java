@@ -7,18 +7,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
-import java.util.HashMap;
 
 import edu.brown.cs.jjeon5.bacon.DNode;
 import edu.brown.cs.jjeon5.bacon.Dijkstra;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 import edu.brown.cs.sp86.autocorrect.Trie;
-import edu.brown.cs.sp86.autocorrect.TrieNode;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -90,7 +86,6 @@ public class MapManager {
 	  } catch(Exception e) {
 		  mode = 1;
 	  }
-	  
 	  DNode start = null;
 	  DNode end = null;
 	  if (mode == 0) {
@@ -173,7 +168,6 @@ public class MapManager {
     }
     return intersec;
   }
-
 
   public List<DNode> getNeighbors(DNode n) throws SQLException {
 	  List<DNode> neighbors = new ArrayList<DNode>();

@@ -31,7 +31,6 @@ import java.sql.SQLException;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
-import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 
 /**

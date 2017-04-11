@@ -88,18 +88,18 @@ public class TrieNode {
   }
   /**
    *
-   * @param letter set child with given letter.
+   * @param c set child with given letter.
    */
-  public void setChild(char letter) {
+  public void setChild(char c) {
     int index;
-    if (Character.isUpperCase(letter)) {
-      index = letter - 'A';
-    } else if (Character.isLowerCase(letter)) {
-      index = letter - 'G';
+    if (Character.isUpperCase(c)) {
+      index = c - 'A';
+    } else if (Character.isLowerCase(c)) {
+      index = c - 'G';
     } else {
-      index = 52;
+      index = '4';
     }
-    this.children[index] = new TrieNode(letter);
+    this.children[index] = new TrieNode(c);
   }
   /**
    *
