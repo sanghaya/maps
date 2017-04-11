@@ -34,8 +34,8 @@ public class MapManager {
   private ConcurrentMap<String, String> traffic = new ConcurrentHashMap<String, String>();
 
   public MapManager() {
-    TrafficUpdate R1 = new TrafficUpdate("Thread-1");
-    R1.start();
+    //TrafficUpdate R1 = new TrafficUpdate("Thread-1");
+    //R1.start();
   }
 
   public Map<String, String> getTraffic() {
