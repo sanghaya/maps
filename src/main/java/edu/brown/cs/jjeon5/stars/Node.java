@@ -39,7 +39,7 @@ public class Node implements KDable<Node>{
   
   @Override
   public double distance(Node b) {
-    return Math.sqrt(Math.pow((lat - b.getLat()), 2) + Math.pow((lon - b.getLon()), 2));
+    return Math.pow((lat - b.getLat()), 2) + Math.pow((lon - b.getLon()), 2);
   }
   
   /**

@@ -20,6 +20,9 @@ let startingTemp;
 let endTemp;
 let gettingPathFromStreet = false;
 
+let traffic = {};
+let trafficPaths = [];
+
 $(document).ready(() => {
     // Setting up the canvas.
     canvas = $('#map')[0];
@@ -39,8 +42,14 @@ $(document).ready(() => {
 
     $('#map').mouseup(pointOnClick);
     $('form').submit(getPathFromSt)
-    $("textarea").on('keyup', printSuggestions)    
+    $("textarea").on('keyup', printSuggestions)
+         
+    window.setInterval(function(){
+        getTraffic();  
+    }, 1000);
 });
+
+
 
 $('html, body').css({
     overflow: 'hidden',
@@ -133,6 +142,14 @@ function draw() {
                 for (let way of map[key]) {
                     const start = [parseFloat(way[1]), parseFloat(way[2])];
                     const end = [parseFloat(way[3]), parseFloat(way[4])];
+                    
+                    if(traffic[way[0]]){
+                        //console.log(parseFloat(traffic[way[0]]));
+                        //if(parseFloat(traffic[way[0]]) > 5) {
+                            trafficPaths.push(way);
+                            //console.log("wooow")
+                        //}
+                    }
 
                     ctx.moveTo(toPixelx(start), toPixely(start));
                     ctx.lineTo(toPixelx(end), toPixely(end));
@@ -144,9 +161,48 @@ function draw() {
     }
     ctx.strokeStyle = 'black'
     ctx.lineWidth = 1;
+    ctx.closePath();
     ctx.stroke();
 
+    highlightTraffic();
     highlightPaths();
+}
+
+function highlightTraffic() {
+    // console.log("traffic highlight")
+    // console.log(trafficPaths)
+    
+    for (let way of trafficPaths) {
+        ctx.beginPath();
+        const start = [parseFloat(way[1]), parseFloat(way[2])];
+        const end = [parseFloat(way[3]), parseFloat(way[4])];
+        //console.log(start + ", " + end)
+        ctx.moveTo(toPixelx(start), toPixely(start));
+        ctx.lineTo(toPixelx(end), toPixely(end));
+        //ctx.strokeStyle = 
+        ctx.strokeStyle = "#"+getColor(parseFloat(traffic[way[0]]) / 10.0);
+        ctx.lineWidth = 3;
+        ctx.closePath();
+        ctx.stroke();
+    }
+    
+    trafficPaths = [];
+}
+
+function getColor(ratio) {
+    var color1 = 'FF0000';
+    var color2 = '99ff33';
+    var hex = function(x) {
+        x = x.toString(16);
+        return (x.length == 1) ? '0' + x : x;
+    };
+
+    var r = Math.ceil(parseInt(color1.substring(0,2), 16) * ratio + parseInt(color2.substring(0,2), 16) * (1-ratio));
+    var g = Math.ceil(parseInt(color1.substring(2,4), 16) * ratio + parseInt(color2.substring(2,4), 16) * (1-ratio));
+    //var b = Math.ceil(parseInt(color1.substring(4,6), 16) * ratio + parseInt(color2.substring(4,6), 16) * (1-ratio));
+    var b = 0;
+
+    return hex(r) + hex(g) + hex(b);
 }
 
 function getWays(x, y) {
@@ -166,12 +222,12 @@ function getWays(x, y) {
 function highlightPaths() {
     if(startingTemp) {
         ctx.fillStyle = "Red";
-        ctx.fillRect(toPixelx(startingTemp), toPixely(startingTemp), 5, 5);
+        ctx.fillRect(toPixelx(startingTemp), toPixely(startingTemp), 10, 10);
     }    
 
     if(endTemp) {
         ctx.fillStyle = "#09F";
-        ctx.fillRect(toPixelx(endTemp), toPixely(endTemp), 5, 5);
+        ctx.fillRect(toPixelx(endTemp), toPixely(endTemp), 10, 10);
     } 
 
     if ((startingTemp && endTemp) || gettingPathFromStreet) {
@@ -186,7 +242,9 @@ function highlightPaths() {
         ctx.fillText("Navigating...", 350, 480);
     }
 
+    //ctx.save();
     ctx.beginPath();
+    //ctx.setLineDash([20, 10])
     for (let path of paths) {
         const st = [parseFloat(path[0]), parseFloat(path[1])];
         const en = [parseFloat(path[2]), parseFloat(path[3])];
@@ -194,9 +252,11 @@ function highlightPaths() {
         ctx.lineTo(toPixelx(en), toPixely(en));
         
     }
-    ctx.strokeStyle = 'red'
+    ctx.strokeStyle = '#1E90FF'
     ctx.lineWidth = 5;
+    ctx.closePath();
     ctx.stroke();
+    //ctx.restore();
 }
 
 function getPathFromSt() {
@@ -234,6 +294,14 @@ function printSuggestions(event) {
         if (word.length == 0) {
             $("#candi").empty();
         }
+    });
+}   
+
+function getTraffic() {
+    $.post("/getTraffic", {"a": "a"}, responseJSON => {
+        const responseObject = JSON.parse(responseJSON);
+        traffic = responseObject;
+        draw();
     });
 }   
 

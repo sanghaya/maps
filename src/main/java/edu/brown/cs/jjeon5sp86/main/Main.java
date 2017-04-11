@@ -43,6 +43,7 @@ public final class Main {
 
   private static final int DEFAULT_PORT = 4567;
   private static final Gson GSON = new Gson();
+  private static boolean mapSet = false;
   /**
    * The initial method called when execution begins.
    *
@@ -109,17 +110,22 @@ public final class Main {
     Spark.post("/getNearest", new NearHandler());
     Spark.post("/getPathFromNode", new PathHandler());
     Spark.post("/suggestion", new SuggestHandler());
+    Spark.post("/getTraffic", new TrafficUpdateHandler());
   }
   
   private static class FrontHandler implements TemplateViewRoute {
     @Override
     public ModelAndView handle(Request req, Response res) {
-    	String[] parts = { "map", "data/maps/maps.sqlite3" };
-    	try {
-    	  db.mapCommand(Arrays.asList(parts));
-    	} catch (Exception e) {
-    		System.out.println(e);
+    	if (!mapSet) {
+    		mapSet = true;
+	    	String[] parts = { "map", "data/maps/maps.sqlite3" };
+	    	try {
+	    	  db.mapCommand(Arrays.asList(parts));
+	    	} catch (Exception e) {
+	    		System.out.println(e);
+	    	}
     	}
+    	System.out.println("sending html");
     	Map<String, Object> variables = ImmutableMap.of("title",
               "Maps");
     	return new ModelAndView(variables, "draw.ftl");
@@ -190,6 +196,15 @@ public final class Main {
       return GSON.toJson(variables);
     }
   }
+  
+  private static class TrafficUpdateHandler implements Route {
+	    @Override
+	    public String handle(Request req, Response res) {
+	    	System.out.println("trying");
+	      Map<String, String> variables = db.getTraffic();
+	      return GSON.toJson(variables);
+	    }
+	  }
   
   
   private static class ExceptionPrinter implements ExceptionHandler {

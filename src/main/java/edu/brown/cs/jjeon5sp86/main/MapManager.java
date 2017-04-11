@@ -1,16 +1,23 @@
 package edu.brown.cs.jjeon5sp86.main;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.HashMap;
 
 import edu.brown.cs.jjeon5.bacon.DNode;
@@ -28,7 +35,77 @@ public class MapManager {
   private Connection conn = null;
   private Trie trie = new Trie();
   private KDTree<Node> tree = null;
- 
+  private ConcurrentMap<String, String> traffic = new ConcurrentHashMap<String, String>();
+  
+  public MapManager() {
+	  TrafficUpdate R1 = new TrafficUpdate( "Thread-1");
+      R1.start();
+  }
+  
+  public Map<String, String> getTraffic() {
+	  Map<String, String> toReturn = new HashMap<String, String>(traffic);
+	  return toReturn;
+  }
+  
+  class TrafficUpdate implements Runnable {
+	   private Thread t;
+	   private String threadName;
+	   
+	   TrafficUpdate( String name) {
+	      threadName = name;
+	      System.out.println("Creating " +  threadName );
+	   }
+	   
+	   public void run() {
+	      System.out.println("Running " +  threadName );
+	      try {
+	    	 long timeStamp = 0;
+	         for(int i = 10000; i > 0; i--) {
+	            //System.out.println("Thread: " + threadName + ", " + i);
+	            getHTML("http://localhost:8080/?last=" + timeStamp);
+	            timeStamp = Instant.now().getEpochSecond();
+	            Thread.sleep(1000);
+	         }	
+	      }catch (Exception e) {
+	         System.out.println(e);
+	      }
+	      
+	      System.out.println("Thread " +  threadName + " exiting.");
+	   }
+	   
+	   public void start () {
+	      System.out.println("Starting " +  threadName );
+	      if (t == null) {
+	         t = new Thread (this, threadName);
+	         t.start ();
+	      }
+	   }
+	   
+	   public void getHTML(String urlToRead) throws Exception {
+		   	System.out.println(urlToRead);
+		      StringBuilder result = new StringBuilder();
+		      URL url = new URL(urlToRead);
+		      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		      conn.setRequestMethod("GET");
+		      BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		      String line;
+		      while ((line = rd.readLine()) != null) {
+		         result.append(line);
+		      }
+		      rd.close();
+		      String data = result.toString();
+		      data = data.replaceAll("\\[", "").replaceAll("\\]","").replaceAll("\"", "").replaceAll(" ", "");
+		      String[] array = data.split(",");
+		      if(array.length >= 2) {
+		    	  for(int i=0; i< array.length; i=i+2) {
+			    	  System.out.println(array[i]+"  ->  "+array[i+1]);
+			    	  traffic.putIfAbsent(array[i], array[i+1]);
+			      }
+		      }
+		}
+	}
+
+  
   public void mapCommand(List<String> tokens) throws SQLException {
     if (tokens.size() >= 2) {
        if (tokens.get(0).equals("map")) {
@@ -386,7 +463,8 @@ public class MapManager {
       nodes = queryFromId(id);
       List<String> start = queryLatLon(nodes.get(1));
       List<String> end = queryLatLon(nodes.get(2));
-      inpt.add(nodes.get(0));
+      //inpt.add(nodes.get(0));
+      inpt.add(id);
       inpt.add(start.get(0));
       inpt.add(start.get(1));
       inpt.add(end.get(0));
