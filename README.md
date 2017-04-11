@@ -10,19 +10,19 @@ We used Autocomplete from Sang Ha's (sp86), Stars and Bacon from Jaehyun's (jjeo
 -Design details specific to your code, including how you fit each of the prior project’s codebases together
 
 
--Any runtime/space optimizations you made beyond the minimum requirements
 - How to run your tests
 
 For TA tests, ./tests/cs32-test ./tests/ta/*.test
 For student tests, ./tests/cs32-test ./tests/student/*.test
 Rest are standard JUnit tests that can be run with mvn package.
 
+Inside our traffic server code, we request to traffic server every ONESECOND and we do this by using the thread.sleep command on a separate thread. therefore when running system tests it may take an additional second after fully outputting the results because we safely terminate this separately running thread 
+
+
 - Any tests you wrote and tried by hand
 - How to build/run your program from the command line
 0) Traffic Server
 run on port 8080. our database is maps.sqlite3 (locally we had it on ./data/maps/maps.sqlite3)
-
-Inside our traffic server code, we request to traffic server every ONESECOND and we do this by using the thread.sleep command on a separate thread. therefore when running system tests it may take an additional second after fully outputting the results because we safely terminate this separately running thread 
 
 1) terminal
 ./run, then set database (ex: map data/maps/maps.sqlite3), then run 5 commands 
