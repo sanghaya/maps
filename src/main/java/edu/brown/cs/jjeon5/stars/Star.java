@@ -1,4 +1,4 @@
- package edu.brown.cs.jjeon5.stars;
+package edu.brown.cs.jjeon5.stars;
 
 import java.util.Objects;
 

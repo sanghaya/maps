@@ -7,6 +7,7 @@ package edu.brown.cs.jjeon5.stars;
  *          T is a class that implements the KDable interface.
  *
  */
+
 public interface KDable<T> {
   /**
    * returns distance between two KDables.

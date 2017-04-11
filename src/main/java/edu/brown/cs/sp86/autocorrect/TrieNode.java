@@ -2,6 +2,7 @@ package edu.brown.cs.sp86.autocorrect;
 
 /**
  * Class of Node of a Trie.
+ * 
  * @author sangha
  *
  */
@@ -21,14 +22,17 @@ public class TrieNode {
     this.isLeaf = true;
     this.children = new TrieNode[size];
   }
+
   /**
    *
-   * @param c character to be put into the node.
+   * @param c
+   *          character to be put into the node.
    */
   public TrieNode(char c) {
     this();
     this.letter = c;
   }
+
   /**
    *
    * @return boolean value of the whether node is a leaf.
@@ -36,13 +40,16 @@ public class TrieNode {
   public boolean getLeaf() {
     return this.isLeaf;
   }
+
   /**
    *
-   * @param value boolean value to set the leaf.
+   * @param value
+   *          boolean value to set the leaf.
    */
   public void setLeaf(boolean value) {
     this.isLeaf = value;
   }
+
   /**
    *
    * @return boolean value of isWord.
@@ -50,13 +57,16 @@ public class TrieNode {
   public boolean getWord() {
     return this.isWord;
   }
+
   /**
    *
-   * @param value boolean value to set the leaf as word.
+   * @param value
+   *          boolean value to set the leaf as word.
    */
   public void setWord(boolean value) {
     this.isWord = value;
   }
+
   /**
    *
    * @return letter of the node.
@@ -64,21 +74,26 @@ public class TrieNode {
   public char getLetter() {
     return letter;
   }
+
   /**
    *
-   * @param letter set letter of the node.
+   * @param letter
+   *          set letter of the node.
    */
   public void setLetter(char letter) {
     this.letter = letter;
   }
+
   /**
    *
-   * @param index specifies which child.
+   * @param index
+   *          specifies which child.
    * @return child TrieNode
    */
   public TrieNode getChild(int index) {
     return children[index];
   }
+
   /**
    *
    * @return size of the children.
@@ -86,9 +101,11 @@ public class TrieNode {
   public int getChildSize() {
     return children.length;
   }
+
   /**
    *
-   * @param letter set child with given letter.
+   * @param letter
+   *          set child with given letter.
    */
   public void setChild(char letter) {
     int index;
@@ -101,6 +118,7 @@ public class TrieNode {
     }
     this.children[index] = new TrieNode(letter);
   }
+
   /**
    *
    * @return parent Trie Node.
@@ -108,9 +126,11 @@ public class TrieNode {
   public TrieNode getParent() {
     return parent;
   }
+
   /**
    *
-   * @param parent set parent Trie Node.
+   * @param parent
+   *          set parent Trie Node.
    */
   public void setParent(TrieNode parent) {
     this.parent = parent;

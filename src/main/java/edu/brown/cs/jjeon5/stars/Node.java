@@ -2,28 +2,28 @@ package edu.brown.cs.jjeon5.stars;
 
 import java.util.Objects;
 
-public class Node implements KDable<Node>{
-	private String id;
-	private double lat;
-	private double lon;
-	
-	public Node(String id, String lat, String lon) {
-	    this.id = id;
-	    this.lat = Double.parseDouble(lat);
-	    this.lon = Double.parseDouble(lon);
-	  }
+public class Node implements KDable<Node> {
+  private String id;
+  private double lat;
+  private double lon;
 
-	public String getId() {
-		return id;
-	}
-	
-	public double getLat() {
-		return lat;
-	}
+  public Node(String id, String lat, String lon) {
+    this.id = id;
+    this.lat = Double.parseDouble(lat);
+    this.lon = Double.parseDouble(lon);
+  }
 
-	public double getLon() {
-		return lon;
-	}
+  public String getId() {
+    return id;
+  }
+
+  public double getLat() {
+    return lat;
+  }
+
+  public double getLon() {
+    return lon;
+  }
 
   @Override
   public int compareDim(int dim, Node b) {
@@ -36,12 +36,12 @@ public class Node implements KDable<Node>{
       return -1;
     }
   }
-  
+
   @Override
   public double distance(Node b) {
     return Math.pow((lat - b.getLat()), 2) + Math.pow((lon - b.getLon()), 2);
   }
-  
+
   /**
    * Return the String representation of this node.
    *

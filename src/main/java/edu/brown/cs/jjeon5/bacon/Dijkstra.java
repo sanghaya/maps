@@ -10,8 +10,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import edu.brown.cs.jjeon5sp86.main.MapManager;
+
 /**
  * Dijkstra class.
+ * 
  * @author sangha
  *
  */
@@ -19,19 +21,25 @@ public class Dijkstra {
 
   private MapManager bm;
   private final int size = 11;
+
   /**
    *
-   * @param mapManager db that runs queries.
+   * @param mapManager
+   *          db that runs queries.
    */
   public Dijkstra(MapManager mapManager) {
     this.bm = mapManager;
   }
+
   /**
    *
-   * @param start starting dnode
-   * @param end ending dnode
+   * @param start
+   *          starting dnode
+   * @param end
+   *          ending dnode
    * @return dnode
-   * @throws SQLException thrown for SQLError
+   * @throws SQLException
+   *           thrown for SQLError
    */
   public DNode findPath(DNode start, DNode end) throws SQLException {
     Map<String, Double> frontierWeights = new HashMap<String, Double>();

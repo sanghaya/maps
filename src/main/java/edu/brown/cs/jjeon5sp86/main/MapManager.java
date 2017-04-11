@@ -11,123 +11,120 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.HashMap;
 
 import edu.brown.cs.jjeon5.bacon.DNode;
 import edu.brown.cs.jjeon5.bacon.Dijkstra;
 import edu.brown.cs.jjeon5.stars.KDTree;
 import edu.brown.cs.jjeon5.stars.Node;
 import edu.brown.cs.sp86.autocorrect.Trie;
-import edu.brown.cs.sp86.autocorrect.TrieNode;
-
-import java.util.HashSet;
-import java.util.Iterator;
-
 
 public class MapManager {
   private Connection conn = null;
   private Trie trie = new Trie();
   private KDTree<Node> tree = null;
   private ConcurrentMap<String, String> traffic = new ConcurrentHashMap<String, String>();
-  
-  public MapManager() {
-	  TrafficUpdate R1 = new TrafficUpdate( "Thread-1");
-      R1.start();
-  }
-  
-  public Map<String, String> getTraffic() {
-	  Map<String, String> toReturn = new HashMap<String, String>(traffic);
-	  return toReturn;
-  }
-  
-  class TrafficUpdate implements Runnable {
-	   private Thread t;
-	   private String threadName;
-	   
-	   TrafficUpdate( String name) {
-	      threadName = name;
-	      System.out.println("Creating " +  threadName );
-	   }
-	   
-	   public void run() {
-	      System.out.println("Running " +  threadName );
-	      try {
-	    	 long timeStamp = 0;
-	         for(int i = 10000; i > 0; i--) {
-	            //System.out.println("Thread: " + threadName + ", " + i);
-	            getHTML("http://localhost:8080/?last=" + timeStamp);
-	            timeStamp = Instant.now().getEpochSecond();
-	            Thread.sleep(1000);
-	         }	
-	      }catch (Exception e) {
-	         System.out.println(e);
-	      }
-	      
-	      System.out.println("Thread " +  threadName + " exiting.");
-	   }
-	   
-	   public void start () {
-	      System.out.println("Starting " +  threadName );
-	      if (t == null) {
-	         t = new Thread (this, threadName);
-	         t.start ();
-	      }
-	   }
-	   
-	   public void getHTML(String urlToRead) throws Exception {
-		   	System.out.println(urlToRead);
-		      StringBuilder result = new StringBuilder();
-		      URL url = new URL(urlToRead);
-		      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		      conn.setRequestMethod("GET");
-		      BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		      String line;
-		      while ((line = rd.readLine()) != null) {
-		         result.append(line);
-		      }
-		      rd.close();
-		      String data = result.toString();
-		      data = data.replaceAll("\\[", "").replaceAll("\\]","").replaceAll("\"", "").replaceAll(" ", "");
-		      String[] array = data.split(",");
-		      if(array.length >= 2) {
-		    	  for(int i=0; i< array.length; i=i+2) {
-			    	  System.out.println(array[i]+"  ->  "+array[i+1]);
-			    	  traffic.putIfAbsent(array[i], array[i+1]);
-			      }
-		      }
-		}
-	}
 
-  
+  public MapManager() {
+    TrafficUpdate R1 = new TrafficUpdate("Thread-1");
+    R1.start();
+  }
+
+  public Map<String, String> getTraffic() {
+    Map<String, String> toReturn = new HashMap<String, String>(traffic);
+    return toReturn;
+  }
+
+  class TrafficUpdate implements Runnable {
+    private Thread t;
+    private String threadName;
+
+    TrafficUpdate(String name) {
+      threadName = name;
+      System.out.println("Creating " + threadName);
+    }
+
+    public void run() {
+      System.out.println("Running " + threadName);
+      try {
+        long timeStamp = 0;
+        for (int i = 10000; i > 0; i--) {
+          // System.out.println("Thread: " + threadName + ", " + i);
+          getHTML("http://localhost:8080/?last=" + timeStamp);
+          timeStamp = Instant.now().getEpochSecond();
+          Thread.sleep(1000);
+        }
+      } catch (Exception e) {
+        System.out.println(e);
+      }
+
+      System.out.println("Thread " + threadName + " exiting.");
+    }
+
+    public void start() {
+      System.out.println("Starting " + threadName);
+      if (t == null) {
+        t = new Thread(this, threadName);
+        t.start();
+      }
+    }
+
+    public void getHTML(String urlToRead) throws Exception {
+      System.out.println(urlToRead);
+      StringBuilder result = new StringBuilder();
+      URL url = new URL(urlToRead);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("GET");
+      BufferedReader rd = new BufferedReader(
+          new InputStreamReader(conn.getInputStream()));
+      String line;
+      while ((line = rd.readLine()) != null) {
+        result.append(line);
+      }
+      rd.close();
+      String data = result.toString();
+      data = data.replaceAll("\\[", "").replaceAll("\\]", "")
+          .replaceAll("\"", "").replaceAll(" ", "");
+      String[] array = data.split(",");
+      if (array.length >= 2) {
+        for (int i = 0; i < array.length; i = i + 2) {
+          System.out.println(array[i] + "  ->  " + array[i + 1]);
+          traffic.putIfAbsent(array[i], array[i + 1]);
+        }
+      }
+    }
+  }
+
   public void mapCommand(List<String> tokens) throws SQLException {
     if (tokens.size() >= 2) {
-       if (tokens.get(0).equals("map")) {
-          setupDB(tokens.get(1));
-          Set<String> traversable = queryWays();
-          List<Node> nodes = new ArrayList<Node>();
-          for(String n:traversable) {
-              List<String> coordinates = queryLatLon(n);
-              Node node = new Node(n, coordinates.get(0), coordinates.get(1));
-              nodes.add(node);
-          }
-          Node[] nodesArray = nodes.toArray(new Node[0]);
-          tree = new KDTree<Node>(nodesArray);
-          //populate Trie
-          Set<String> names = queryNames();
-          buildTrie(names);
+      if (tokens.get(0).equals("map")) {
+        setupDB(tokens.get(1));
+        Set<String> traversable = queryWays();
+        List<Node> nodes = new ArrayList<Node>();
+        for (String n : traversable) {
+          List<String> coordinates = queryLatLon(n);
+          Node node = new Node(n, coordinates.get(0), coordinates.get(1));
+          nodes.add(node);
+        }
+        Node[] nodesArray = nodes.toArray(new Node[0]);
+        tree = new KDTree<Node>(nodesArray);
+        // populate Trie
+        Set<String> names = queryNames();
+        buildTrie(names);
       } else if (tokens.get(0).equals("nearest")) {
-          Node n = new Node("testpt", tokens.get(1), tokens.get(2));
-          List<Node> list = tree.findNearest(1, n);
-          for (int i = 0; i < list.size(); i++) {
-            System.out.println(list.get(i).getId());
-          }
+        Node n = new Node("testpt", tokens.get(1), tokens.get(2));
+        List<Node> list = tree.findNearest(1, n);
+        for (int i = 0; i < list.size(); i++) {
+          System.out.println(list.get(i).getId());
+        }
       } else if (tokens.get(0).equals("ways")) {
         findBoundedWay(tokens.subList(1, 5));
       } else if (tokens.get(0).equals("route")) {
@@ -141,7 +138,7 @@ public class MapManager {
       System.out.println("ERROR: you need more input");
     }
   }
-  
+
   public void setupDB(String filePath) {
     try {
       // this line loads the driver manager class, and must be
@@ -158,76 +155,77 @@ public class MapManager {
       System.out.println("ERROR: Cannot connect to database.");
     }
   }
-  
+
   public List<List<String>> routeCommand(List<String> tokens) {
-	  List<List<String>> ways = new ArrayList<List<String>>();
-	  int mode = 0;
-	  try {
-		  Double.parseDouble(tokens.get(1));
-	  } catch(Exception e) {
-		  mode = 1;
-	  }
-	  
-	  DNode start = null;
-	  DNode end = null;
-	  if (mode == 0) {
-		  Node n1 = new Node("testpt", tokens.get(1), tokens.get(2));
-		  Node n2 = new Node("testpt2", tokens.get(3), tokens.get(4));
-          List<Node> list = tree.findNearest(1, n1);
-          List<Node> list2 = tree.findNearest(1, n2);
-          Node a = list.get(0);
-          Node b = list2.get(0);
-        	  start = new DNode(a.getId(), Double.parseDouble(tokens.get(1)), 
-        			  Double.parseDouble(tokens.get(2)), "", null, 0);
-        	  end = new DNode(b.getId(), Double.parseDouble(tokens.get(3)), 
-        			  Double.parseDouble(tokens.get(4)), "", null, 0);
-	  } else {
-		  try {
-			  String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
-			  String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);			  
-			  List<String> latlon1 = queryLatLon(id1);
-			  List<String> latlon2 = queryLatLon(id2);
-			  start = new DNode(id1, Double.parseDouble(latlon1.get(0)), 
-        			  Double.parseDouble(latlon1.get(1)), "", null, 0);
-			  end = new DNode(id2, Double.parseDouble(latlon2.get(0)), 
-        			  Double.parseDouble(latlon2.get(1)), "", null, 0);
-			  
-		  } catch (Exception e) {
-		  }
-	  }
-	  try {
-		  Dijkstra dj = new Dijkstra(this);
-	      DNode n = dj.findPath(start, end);
-	      if (n == null) {
-	        System.out.println(start.getId() + " -/- " + end.getId());
-	      }
-	      DNode current = n;
-	      List<String> output = new ArrayList<String>();
-	      while (current.getPrevious() != null) {
-	        List<String> one;
-	        List<String> two;
-	        List<String> eachPath = new ArrayList<>();
-	        String s = current.getPrevious().getId() + " -> " + current.getId()
-	            + " : " + current.getPath();
-	        output.add(s);
-	        one = queryLatLon(current.getPrevious().getId());
-	        two = queryLatLon(current.getId());
-	        eachPath.add(one.get(0));
-	        eachPath.add(one.get(1));
-	        eachPath.add(two.get(0));
-	        eachPath.add(two.get(1));
-	        ways.add(eachPath);
-	        current = current.getPrevious();
-	      }
-	      for (int i = output.size() - 1; i >= 0; i--) {
-	        System.out.println(output.get(i));
-	      }
-	  } catch (Exception e) {
-	  }
-	  return ways;
+    List<List<String>> ways = new ArrayList<List<String>>();
+    int mode = 0;
+    try {
+      Double.parseDouble(tokens.get(1));
+    } catch (Exception e) {
+      mode = 1;
+    }
+
+    DNode start = null;
+    DNode end = null;
+    if (mode == 0) {
+      Node n1 = new Node("testpt", tokens.get(1), tokens.get(2));
+      Node n2 = new Node("testpt2", tokens.get(3), tokens.get(4));
+      List<Node> list = tree.findNearest(1, n1);
+      List<Node> list2 = tree.findNearest(1, n2);
+      Node a = list.get(0);
+      Node b = list2.get(0);
+      start = new DNode(a.getId(), Double.parseDouble(tokens.get(1)),
+          Double.parseDouble(tokens.get(2)), "", null, 0);
+      end = new DNode(b.getId(), Double.parseDouble(tokens.get(3)),
+          Double.parseDouble(tokens.get(4)), "", null, 0);
+    } else {
+      try {
+        String id1 = getIntersection(tokens.get(1), tokens.get(2)).get(0);
+        String id2 = getIntersection(tokens.get(3), tokens.get(4)).get(0);
+        List<String> latlon1 = queryLatLon(id1);
+        List<String> latlon2 = queryLatLon(id2);
+        start = new DNode(id1, Double.parseDouble(latlon1.get(0)),
+            Double.parseDouble(latlon1.get(1)), "", null, 0);
+        end = new DNode(id2, Double.parseDouble(latlon2.get(0)),
+            Double.parseDouble(latlon2.get(1)), "", null, 0);
+
+      } catch (Exception e) {
+      }
+    }
+    try {
+      Dijkstra dj = new Dijkstra(this);
+      DNode n = dj.findPath(start, end);
+      if (n == null) {
+        System.out.println(start.getId() + " -/- " + end.getId());
+      }
+      DNode current = n;
+      List<String> output = new ArrayList<String>();
+      while (current.getPrevious() != null) {
+        List<String> one;
+        List<String> two;
+        List<String> eachPath = new ArrayList<>();
+        String s = current.getPrevious().getId() + " -> " + current.getId()
+            + " : " + current.getPath();
+        output.add(s);
+        one = queryLatLon(current.getPrevious().getId());
+        two = queryLatLon(current.getId());
+        eachPath.add(one.get(0));
+        eachPath.add(one.get(1));
+        eachPath.add(two.get(0));
+        eachPath.add(two.get(1));
+        ways.add(eachPath);
+        current = current.getPrevious();
+      }
+      for (int i = output.size() - 1; i >= 0; i--) {
+        System.out.println(output.get(i));
+      }
+    } catch (Exception e) {
+    }
+    return ways;
   }
-  
-  public List<String> getIntersection(String name1, String name2) throws SQLException {
+
+  public List<String> getIntersection(String name1, String name2)
+      throws SQLException {
     List<String> intersec = new ArrayList<String>();
     String name1alt = "";
     String name2alt = "";
@@ -251,42 +249,42 @@ public class MapManager {
     return intersec;
   }
 
-
   public List<DNode> getNeighbors(DNode n) throws SQLException {
-	  List<DNode> neighbors = new ArrayList<DNode>();
-	  
-	  PreparedStatement prep;
-      prep = conn.prepareStatement(
-              "SELECT id, end FROM way WHERE type != ? AND type != ? AND start == ?");
-      prep.setString(1, "unclassified");
-      prep.setString(2, "");
-      prep.setString(3, n.getId());
-      ResultSet rs = prep.executeQuery();
-      while (rs.next()) {
-    	String wayId = rs.getString(1);
-    	String endNode = rs.getString(2);
-        
-    	List<String> coo = queryLatLon(endNode);
-    	double lat = Double.parseDouble(coo.get(0));
-    	double lon = Double.parseDouble(coo.get(1));
-    	
-    	double dist = Math.pow((lat-n.getLat()), 2) + Math.pow((lon-n.getLon()), 2);
-    	
-    	DNode newNode = new DNode(endNode, lat, lon, wayId, n, dist);
-    	neighbors.add(newNode);
-      }
-      rs.close();
-      prep.close();
-      
-      return neighbors;
+    List<DNode> neighbors = new ArrayList<DNode>();
+
+    PreparedStatement prep;
+    prep = conn.prepareStatement(
+        "SELECT id, end FROM way WHERE type != ? AND type != ? AND start == ?");
+    prep.setString(1, "unclassified");
+    prep.setString(2, "");
+    prep.setString(3, n.getId());
+    ResultSet rs = prep.executeQuery();
+    while (rs.next()) {
+      String wayId = rs.getString(1);
+      String endNode = rs.getString(2);
+
+      List<String> coo = queryLatLon(endNode);
+      double lat = Double.parseDouble(coo.get(0));
+      double lon = Double.parseDouble(coo.get(1));
+
+      double dist = Math.pow((lat - n.getLat()), 2)
+          + Math.pow((lon - n.getLon()), 2);
+
+      DNode newNode = new DNode(endNode, lat, lon, wayId, n, dist);
+      neighbors.add(newNode);
+    }
+    rs.close();
+    prep.close();
+
+    return neighbors;
   }
-  
+
   public Set<String> queryWays() throws SQLException {
     Set<String> nodeList = new HashSet<>();
     try {
       PreparedStatement prep;
       prep = conn.prepareStatement(
-              "SELECT start, end FROM way WHERE type != ? OR type != ?");
+          "SELECT start, end FROM way WHERE type != ? OR type != ?");
       prep.setString(1, "unclassified");
       prep.setString(2, "");
       ResultSet rs = prep.executeQuery();
@@ -301,13 +299,12 @@ public class MapManager {
     }
     return nodeList;
   }
- 
+
   public Set<String> queryStartEnd(String name) throws SQLException {
     Set<String> endList = new HashSet<>();
     try {
       PreparedStatement prep;
-      prep = conn.prepareStatement(
-              "SELECT start, end FROM way WHERE name = ?");
+      prep = conn.prepareStatement("SELECT start, end FROM way WHERE name = ?");
       prep.setString(1, name);
       ResultSet rs = prep.executeQuery();
       while (rs.next()) {
@@ -321,13 +318,13 @@ public class MapManager {
     }
     return endList;
   }
-  
+
   public List<String> queryFromId(String id) throws SQLException {
     List<String> nodes = new ArrayList<>();
     try {
       PreparedStatement prep;
-      prep = conn.prepareStatement(
-              "SELECT name, start, end FROM way WHERE id = ?");
+      prep = conn
+          .prepareStatement("SELECT name, start, end FROM way WHERE id = ?");
       prep.setString(1, id);
       ResultSet rs = prep.executeQuery();
       while (rs.next()) {
@@ -342,13 +339,14 @@ public class MapManager {
     }
     return nodes;
   }
-  
-  public Set<String> queryNodes(Double lat1, Double lon1, Double lat2, Double lon2) throws SQLException {
+
+  public Set<String> queryNodes(Double lat1, Double lon1, Double lat2,
+      Double lon2) throws SQLException {
     Set<String> nodeList = new HashSet<>();
     try {
       PreparedStatement prep;
       prep = conn.prepareStatement(
-              "SELECT id FROM node WHERE latitude > ? AND latitude < ? AND longitude < ? And longitude > ?");
+          "SELECT id FROM node WHERE latitude > ? AND latitude < ? AND longitude < ? And longitude > ?");
       prep.setDouble(1, lat2);
       prep.setDouble(2, lat1);
       prep.setDouble(3, lon2);
@@ -365,13 +363,12 @@ public class MapManager {
     return nodeList;
   }
 
-  
   public List<String> queryLatLon(String id) throws SQLException {
     List<String> coordinates = new ArrayList<>();
     try {
       PreparedStatement prep;
       prep = conn.prepareStatement(
-              "SELECT latitude, longitude FROM node WHERE id = ?");
+          "SELECT latitude, longitude FROM node WHERE id = ?");
       prep.setString(1, id);
       ResultSet rs = prep.executeQuery();
       while (rs.next()) {
@@ -385,13 +382,13 @@ public class MapManager {
     }
     return coordinates;
   }
-  
+
   public Set<String> queryWayFromNode(String id) throws SQLException {
     Set<String> wayIdList = new HashSet<>();
     try {
       PreparedStatement prep;
-      prep = conn.prepareStatement(
-              "SELECT id FROM way WHERE start = ? or end = ?");
+      prep = conn
+          .prepareStatement("SELECT id FROM way WHERE start = ? or end = ?");
       prep.setString(1, id);
       prep.setString(2, id);
       ResultSet rs = prep.executeQuery();
@@ -405,25 +402,24 @@ public class MapManager {
     }
     return wayIdList;
   }
-  
+
   public List<String> genSuggestions(String inpt) throws SQLException {
     List<String> candidates = new ArrayList<String>();
     candidates = trie.findWord(inpt);
     for (int i = 0; i < candidates.size(); i++) {
-     System.out.println(candidates.get(i));
-     if (i > 2) {
-       return candidates.subList(0, 3);
-     }
+      System.out.println(candidates.get(i));
+      if (i > 2) {
+        return candidates.subList(0, 3);
+      }
     }
     return candidates;
   }
-  
+
   public Set<String> queryNames() throws SQLException {
     Set<String> names = new HashSet<>();
     try {
       PreparedStatement prep;
-      prep = conn.prepareStatement(
-              "SELECT name FROM way");
+      prep = conn.prepareStatement("SELECT name FROM way");
       ResultSet rs = prep.executeQuery();
       while (rs.next()) {
         names.add(rs.getString(1));
@@ -435,7 +431,7 @@ public class MapManager {
     }
     return names;
   }
-    
+
   public List<String> findBoundedWay(List<String> tokens) throws SQLException {
     Double lat1 = Double.valueOf(tokens.get(0));
     Double lat2 = Double.valueOf(tokens.get(2));
@@ -444,26 +440,26 @@ public class MapManager {
     Set<String> boundedNodes = new HashSet<String>();
     Set<String> boundedWay = new HashSet<String>();
     boundedNodes = queryNodes(lat1, lon1, lat2, lon2);
-   
-    for (String each: boundedNodes) {
+
+    for (String each : boundedNodes) {
       boundedWay.addAll(queryWayFromNode(each));
     }
     List<String> boundedWayList = new ArrayList<String>(boundedWay);
-    for (int i = boundedWayList.size()-1; i >=0; i--) {
+    for (int i = boundedWayList.size() - 1; i >= 0; i--) {
       System.out.println(boundedWayList.get(i));
     }
     return boundedWayList;
   }
-  
+
   public List<List<String>> guiData(List<String> wayId) throws SQLException {
     List<String> nodes = new ArrayList<>();
-    List<List<String>> ways = new ArrayList<List<String>>(); 
-    for (String id: wayId) {
+    List<List<String>> ways = new ArrayList<List<String>>();
+    for (String id : wayId) {
       List<String> inpt = new ArrayList<>();
       nodes = queryFromId(id);
       List<String> start = queryLatLon(nodes.get(1));
       List<String> end = queryLatLon(nodes.get(2));
-      //inpt.add(nodes.get(0));
+      // inpt.add(nodes.get(0));
       inpt.add(id);
       inpt.add(start.get(0));
       inpt.add(start.get(1));
@@ -473,15 +469,15 @@ public class MapManager {
     }
     return ways;
   }
-  
+
   public Trie buildTrie(Set<String> names) {
-    for (String name: names) {
+    for (String name : names) {
       trie.insertWord(trie.getRoot(), name);
     }
     return trie;
   }
-  
+
   public List<Node> findNearestHelper(int n, Node pt) {
-    return tree.findNearest(n, pt); 
+    return tree.findNearest(n, pt);
   }
 }

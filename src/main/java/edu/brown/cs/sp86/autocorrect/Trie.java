@@ -1,22 +1,24 @@
 package edu.brown.cs.sp86.autocorrect;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for Trie.
+ * 
  * @author sangha
  *
  */
 public class Trie {
-
   private TrieNode root;
+
   /**
    * Constructs emptry Trie with a root node.
    */
   public Trie() {
     root = new TrieNode();
   }
+
   /**
    *
    * @return root of the node.
@@ -24,30 +26,23 @@ public class Trie {
   public TrieNode getRoot() {
     return this.root;
   }
+
   /**
    *
-   * @param parent root of the node.
-   * @param s string to be inserted into the Trie
+   * @param parent
+   *          root of the node.
+   * @param s
+   *          string to be inserted into the Trie
    */
-  
+
   /*
-  public void insertWord(TrieNode parent, String s) {
-    if (s.isEmpty()) {
-      return;
-    }
-    char letter = s.charAt(0);
-    int index;
-    if (Character.isUpperCase(letter)) {
-      index = letter - 'A';
-    } else if (Character.isLowerCase(letter)) {
-      index = letter - 'G';
-    } else {
-      index = 52;
-    }
-    System.out.println(letter + ": " + index);
-    insertWord(parent, s.substring(1));
-  }
-  */
+   * public void insertWord(TrieNode parent, String s) { if (s.isEmpty()) {
+   * return; } char letter = s.charAt(0); int index; if
+   * (Character.isUpperCase(letter)) { index = letter - 'A'; } else if
+   * (Character.isLowerCase(letter)) { index = letter - 'G'; } else { index =
+   * 52; } System.out.println(letter + ": " + index); insertWord(parent,
+   * s.substring(1)); }
+   */
 
   public void insertWord(TrieNode parent, String s) {
     if (s.isEmpty()) {
@@ -77,7 +72,8 @@ public class Trie {
 
   /**
    *
-   * @param s string to be found in the Trie.
+   * @param s
+   *          string to be found in the Trie.
    * @return List of String that share prefixes with given string
    */
   public List<String> findWord(String s) {
@@ -106,14 +102,18 @@ public class Trie {
     }
     return findWordHelper(candidates, lastChar);
   }
+
   /**
    * Helper for FindWord.
-   * @param candidates List of string of possible suggestions
-   * @param lastChar Node where prefix ends
+   * 
+   * @param candidates
+   *          List of string of possible suggestions
+   * @param lastChar
+   *          Node where prefix ends
    * @return List of String that share prefixes with given string
    */
   public List<String> findWordHelper(List<String> candidates,
-          TrieNode lastChar) {
+      TrieNode lastChar) {
     if (lastChar.getWord()) {
       candidates.add(printWord(lastChar));
     }
@@ -126,9 +126,11 @@ public class Trie {
     }
     return candidates;
   }
+
   /**
    *
-   * @param node current node to add character
+   * @param node
+   *          current node to add character
    * @return String of a word
    */
   public String printWord(TrieNode node) {
@@ -136,7 +138,7 @@ public class Trie {
       return "";
     } else {
       return printWord(node.getParent())
-              + new String(String.valueOf(node.getLetter()));
+          + new String(String.valueOf(node.getLetter()));
     }
   }
 }

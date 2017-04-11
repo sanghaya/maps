@@ -1,8 +1,10 @@
 package edu.brown.cs.jjeon5.bacon;
 
 import java.util.Objects;
+
 /**
  * Dijkstra Node class.
+ * 
  * @author sangha
  *
  */
@@ -16,16 +18,21 @@ public class DNode {
 
   /**
    *
-   * @param id node id
-   * @param lat latitude
-   * @param lon longitude
-   * @param pathName way name
-   * @param previous previous node id
-   * @param weight length of the way
+   * @param id
+   *          node id
+   * @param lat
+   *          latitude
+   * @param lon
+   *          longitude
+   * @param pathName
+   *          way name
+   * @param previous
+   *          previous node id
+   * @param weight
+   *          length of the way
    */
-  public DNode(String id, double lat, double lon,
-          String pathName, DNode previous,
-      double weight) {
+  public DNode(String id, double lat, double lon, String pathName,
+      DNode previous, double weight) {
     this.id = id;
     this.lat = lat;
     this.lon = lon;
@@ -33,6 +40,7 @@ public class DNode {
     this.previous = previous;
     this.weight = weight;
   }
+
   /**
    *
    * @return way's name
@@ -40,6 +48,7 @@ public class DNode {
   public String getPath() {
     return pathName;
   }
+
   /**
    *
    * @return node's latitude
@@ -47,6 +56,7 @@ public class DNode {
   public double getLat() {
     return lat;
   }
+
   /**
    *
    * @return node's longitude
@@ -54,6 +64,7 @@ public class DNode {
   public double getLon() {
     return lon;
   }
+
   /**
    *
    * @return node's id
@@ -61,6 +72,7 @@ public class DNode {
   public String getId() {
     return id;
   }
+
   /**
    *
    * @return previous node's id
@@ -76,20 +88,25 @@ public class DNode {
   public double getWeight() {
     return weight;
   }
+
   /**
    *
-   * @param w weight of double
+   * @param w
+   *          weight of double
    */
   public void setWeight(double w) {
     weight = w;
   }
+
   /**
    *
-   * @param n previous node n
+   * @param n
+   *          previous node n
    */
   public void setPrevious(DNode n) {
     previous = n;
   }
+
   /**
    * Override hash.
    */
@@ -97,6 +114,7 @@ public class DNode {
   public int hashCode() {
     return Objects.hash(id, lat, lon);
   }
+
   /**
    * Override equals.
    */
@@ -110,14 +128,16 @@ public class DNode {
     }
     DNode c = (DNode) o;
     return id.equals(c.getId()) && (Double.compare(lat, c.getLat()) == 0)
-            && (Double.compare(lon, c.getLon()) == 0);
+        && (Double.compare(lon, c.getLon()) == 0);
   }
+
   /**
    * clone() for proxy.
+   * 
    * @return n dnode
    */
   public DNode clone() {
-    DNode n = new DNode(id, lat, lon,  pathName, previous, weight);
+    DNode n = new DNode(id, lat, lon, pathName, previous, weight);
     return n;
   }
 }
