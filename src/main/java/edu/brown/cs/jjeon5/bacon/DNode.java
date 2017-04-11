@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Dijkstra Node class.
- * 
+ *
  * @author sangha
  *
  */
@@ -133,7 +133,7 @@ public class DNode {
 
   /**
    * clone() for proxy.
-   * 
+   *
    * @return n dnode
    */
   public DNode clone() {

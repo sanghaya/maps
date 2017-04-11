@@ -83,6 +83,8 @@ public final class Main {
     } catch (IOException e) {
       System.out.println("ERROR: No command to read");
     }
+
+    db.closeThread();
   }
 
   private static FreeMarkerEngine createEngine() {
@@ -200,7 +202,6 @@ public final class Main {
   private static class TrafficUpdateHandler implements Route {
     @Override
     public String handle(Request req, Response res) {
-      System.out.println("trying");
       Map<String, String> variables = db.getTraffic();
       return GSON.toJson(variables);
     }
