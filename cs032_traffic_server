@@ -1,0 +1,121 @@
+#!/usr/bin/python
+
+IS_NITROS = False
+
+import json 
+import urlparse
+import random
+import thread
+import calendar
+import time
+import sqlite3
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from threading import Thread, Lock
+from sys import argv, exit
+from time import sleep
+import signal
+import sys
+
+# unordered list of way names. The make changes thread will select a random
+# way from here and give it a new traffic level
+way_names = []
+# changes is a dictionary of timestamp to (way_id, traffic_level)
+changes = {}
+# change_times is an ordered list of the timestamps of changes, with the most
+# recent timestamp being first.
+change_times = []
+# mutex for accessing changes
+change_mutex = Lock()
+
+# handle ctrl-c
+def signal_handler(signal, frame):
+  print 'You pressed Ctrl+C! Exiting...'
+  print ''
+  print ''
+  print ''
+  print ''
+  sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+
+# this thread is constantly updating traffic levels
+def make_changes():
+  while True:
+    if IS_NITROS:
+      sleep(.001)
+    else:
+      sleep(random.uniform(0, 3))
+    change_mutex.acquire()
+    current_time = time.time()
+    changes[current_time] = (
+      random.choice(way_names), 
+      min(1 + random.gammavariate(1, 2) / 1.5, 10)
+    )
+    change_times.insert(0, current_time)
+    change_mutex.release()
+
+# The Webserverrrrrr
+class myHandler(BaseHTTPRequestHandler):
+  # Handler for the GET requests
+  def do_GET(self):
+    # ignore requests for favicon
+    if self.path == '/favicon.ico':
+      return
+
+    # parse the url parameters
+    parsed_path = urlparse.urlparse(self.path)
+    get_parameters = [x for x in [p.split('=') for p in parsed_path[4].split('&')] if x]
+    timestamp = 0
+    for param in get_parameters:
+      if param[0] == 'last':
+        timestamp = param[1]
+        break
+
+    # build the list of updates the user hasn't seen yet
+    response = []
+    change_mutex.acquire()
+    for date in change_times:
+      if int(date) < int(timestamp):
+        break 
+      response.append(changes[date])
+    change_mutex.release()
+    
+    # bombs away
+    self.send_response(200)
+    self.send_header('Content-type','application/json')
+    self.end_headers()
+    # Send the html message
+    self.wfile.write(json.dumps(response))
+    return
+
+if len(argv) != 3:
+  print 'error: Usage: {0} <port> <map_database>'.format(argv[0])
+  print 'The address and port number should point to your server process.'
+  exit(0)
+
+# check to see if we're in nitros mode
+if 'nitros' in argv[0]:
+  IS_NITROS = True
+    
+# connet to sql database
+try:
+  conn = sqlite3.connect(argv[2])
+  c = conn.cursor()
+  way_names = [x[0] for x in c.execute('select id from way') if x[0]]
+except Exception:
+  print 'Error with the sqlite3 database file "{0}". Exiting.'.format(argv[2])
+  exit(0)
+# verify the port is correct
+try:
+  port = int(argv[1])
+except Exception:
+  print 'Error with the port number "{0}". Exiting.'.format(argv[1])
+  exit(0)
+
+#Create a web server and define the handler to manage the
+#incoming request
+server = HTTPServer(('', port), myHandler)
+print 'Started httpserver on port ' , port
+
+thread.start_new_thread(make_changes, ())
+#Wait forever for incoming http requests
+server.serve_forever()

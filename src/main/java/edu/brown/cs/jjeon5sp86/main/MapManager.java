@@ -85,6 +85,7 @@ public class MapManager {
           if (!threadStop) {
             getHTML("http://localhost:8080/?last=" + timeStamp);
             timeStamp = Instant.now().getEpochSecond();
+            System.out.println(timeStamp);
             Thread.sleep(ONESECOND);
           }
         }
